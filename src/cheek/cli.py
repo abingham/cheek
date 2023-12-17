@@ -68,7 +68,7 @@ def build_cli():
     # For each registered Command subclass, construct a CLI command.
     for command_class in cheek.commands.all_command_classes():
 
-        @cli.command(name=command_class._command_name())
+        @cli.command(name=command_class.user_name())
         def cmd(**kwargs):
             command_instance = construct_command_from_kwargs(command_class, kwargs)
             log.info(command_instance)

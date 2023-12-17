@@ -18,7 +18,7 @@ class Command(BaseModel):
     @property
     def command(self):
         "The command string what will be send to Audacity."
-        return f'{self._command_name()}: {" ".join(self._field_strings())}'
+        return f'{self._scripting_command_name()}: {" ".join(self._field_strings())}'
 
     def _field_strings(self):
         "Yields the fields of the command, skipping None values."
@@ -28,9 +28,15 @@ class Command(BaseModel):
             yield f'{field}="{value}"'
 
     @classmethod
-    def _command_name(cls):
+    def _scripting_command_name(cls):
         "The name of the scripting command to use. Defaults to the class name."
         return cls.__name__
+
+    @classmethod
+    def user_name(cls):
+        "The visual name of the command (i.e. for user interfaces)."
+        return cls.__name__
+
 
 
 def do(*commands: Command, intercommand_delay=0.001) -> list[str]:
@@ -85,7 +91,7 @@ class Open(Command):
     # TODO: Raise exception if filename not found.
 
     @classmethod
-    def _command_name(cls):
+    def _scripting_command_name(cls):
         return "OpenProject2"
 
 
