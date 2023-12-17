@@ -1,6 +1,7 @@
 """Command line interface for cheek.
 """
 
+from enum import Enum
 import logging
 from types import NoneType, UnionType
 from typing import Any, Type
@@ -18,7 +19,8 @@ log = logging.getLogger()
 #
 # A good example of one of these is `Chirp`.
 
-def field_info_to_click_type(field_info: pydantic.fields.FieldInfo):
+
+def field_info_to_python_type(field_info: pydantic.fields.FieldInfo):
     "Determine the click type from a pydantic FieldInfo."
     ann = field_info.annotation
 
@@ -59,6 +61,32 @@ def construct_command_from_kwargs(
     return command_instance
 
 
+def create_click_param(field_name: str, field_info: pydantic.fields.FieldInfo) -> click.Parameter:
+    "Create a click Parameter from a pydantic field."
+    python_type = field_info_to_python_type(field_info)
+    # if isinstance(python_type, Enum):
+    #     breakpoint()
+    return click.Option(
+        [f"--{field_name}"],
+        type=python_type,
+        default=field_info.default,
+        required=field_info.is_required(),
+        show_default=True,
+    )
+
+
+def create_click_callback(command_class):
+    "Create a callback for a click command from a Command class."
+
+    def cmd_func(**kwargs):
+        command_instance = construct_command_from_kwargs(command_class, kwargs)
+        log.info(command_instance)
+        results = cheek.commands.do(command_instance)
+        print(results)
+
+    return cmd_func
+
+
 def build_cli():
     """Build the command group for the CLI.
 
@@ -66,33 +94,24 @@ def build_cli():
         click.Group: The command group.
     """
 
-    @click.group
-    def cli():
-        pass
+    cli = click.Group()
 
     # For each registered Command subclass, construct a CLI command.
     for command_class in cheek.commands.all_command_classes():
-
-        @cli.command(name=command_class.user_name())
-        def cmd(**kwargs):
-            command_instance = construct_command_from_kwargs(command_class, kwargs)
-            log.info(command_instance)
-            results = cheek.commands.do(command_instance)
-            print(results)
-
-        # TODO: Is there are more imperative way to use click to build the CLI?
-
         # Loop over command.model_fields to figure out CLI arguments. Do this in reverse so that the innermost
         # decoration represents the last argument.
-        for field_name, field_info in reversed(command_class.model_fields.items()):
-            click_type = field_info_to_click_type(field_info)
-            cmd = click.option(
-                f"--{field_name}",
-                type=click_type,
-                default=field_info.default,
-                required=field_info.is_required(),
-                show_default=True
-            )(cmd)
+        click_params = [
+            create_click_param(field_name, field_info)
+            for field_name, field_info in reversed(command_class.model_fields.items())
+        ]
+
+        click_command = click.Command(
+            name=command_class.user_name(),
+            callback=create_click_callback(command_class),
+            params=click_params,
+        )
+
+        cli.add_command(click_command)
 
     return cli
 
