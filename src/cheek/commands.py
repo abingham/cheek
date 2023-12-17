@@ -100,19 +100,6 @@ class Close(Command):
     """Closes the current project window, prompting you to save your work if you have not saved."""
 
 
-class ChirpWaveform(Enum):
-    SINE = "Sine"
-    SQUARE = "Square"
-    SAWTOOTH = "Sawtooth"
-    SQUARE_NO_ALIAS = "Square, no alias"
-    TRIANGLE = "Triangle"  # Note: This option doesn't appear in the scripting documentation but does in the UI.
-
-
-class ChirpInterpolation(Enum):
-    LINEAR = "Linear"
-    LOGARITHMIC = "Logarithmic"
-
-
 class NoiseType(Enum):
     WHITE = "White"
     PINK = "Pink"
@@ -912,29 +899,35 @@ class Nyquist(Command):
     """Shows the list of available Nyquist effects but only if the user has effects "Grouped by Type" in Effects Preferences."""
 
 
+class ChirpWaveform(Enum):
+    SINE = "Sine"
+    SQUARE = "Square"
+    SAWTOOTH = "Sawtooth"
+    SQUARE_NO_ALIAS = "Square, no alias"
+    TRIANGLE = "Triangle"  # Note: This option doesn't appear in the scripting documentation but does in the UI.
+
+
+class ChirpInterpolation(Enum):
+    LINEAR = "Linear"
+    LOGARITHMIC = "Logarithmic"
+
+
 @register_command
 class Chirp(Command):
     """Generates four different types of tone waveforms like the Tone Generator, but additionally allows setting of the starting and ending amplitude and frequency."""
-    # TODO
-    # double StartFreq, (default:440)
-    # double EndFreq, (default:1320)
-    # double StartAmp, (default:0.8)
-    # double EndAmp, (default:0.1)
-    # enum Waveform, (default:Sine)
 
-    #  Sine
-    #  Square
-    #  Sawtooth
-    #  Square, no alias
-    # enum Interpolation, (default:Linear)
-
-    #  Linear
-    #  Logarithmic
+    StartFreq: float = 440
+    EndFreq: float = 1320
+    StartAmp: float = 0.8
+    EndAmp: float = 0.1
+    Waveform: ChirpWaveform = ChirpWaveform.SINE
+    Interpolation: ChirpInterpolation = ChirpInterpolation.LINEAR
 
 
 @register_command
 class DtmfTones(Command):
     """Generates dual-tone multi-frequency (DTMF) tones like those produced by the keypad on telephones."""
+
     # TODO
     # string Sequence, (default:audacity)
     # double Duty Cycle, (default:55)
@@ -944,6 +937,7 @@ class DtmfTones(Command):
 @register_command
 class Noise(Command):
     """Generates 'white', 'pink' or 'brown' noise."""
+
     # TODO
     # enum Type, (default:White)
     #  White
@@ -955,6 +949,7 @@ class Noise(Command):
 @register_command
 class Tone(Command):
     """Generates one of four different tone waveforms: Sine, Square, Sawtooth or Square (no alias), and a frequency between 1 Hz and half the current [[Audio Settings Preferences|Project Sample Rate."""
+
     # TODO
     # double Frequency, (default:440)
     # double Amplitude, (default:0.8)
@@ -973,6 +968,7 @@ class Tone(Command):
 @register_command
 class Pluck(Command):
     """A synthesized pluck tone with abrupt or gradual fade-out, and selectable pitch corresponding to a MIDI note."""
+
     # TODO
     # int pitch, (default:0)
     # enum fade, (default:Abrupt)
@@ -985,6 +981,7 @@ class Pluck(Command):
 @register_command
 class RhythmTrack(Command):
     """Generates a track with regularly spaced sounds at a specified tempo and number of beats per measure (bar)."""
+
     # TODO
     # double tempo, (default:0)
     # int timesig, (default:0)
@@ -1009,6 +1006,7 @@ class RhythmTrack(Command):
 @register_command
 class RissetDrum(Command):
     """Produces a realistic drum sound."""
+
     # TODO
     # double freq, (default:0)
     # double decay, (default:0)
@@ -1036,6 +1034,7 @@ class LADSPA(Command):
 @register_command
 class Amplify(Command):
     """Increases or decreases the volume of the audio you have selected."""
+
     # TODO
     # float Ratio, (default:0.9)
     # bool AllowClipping, (default:False)
@@ -1044,6 +1043,7 @@ class Amplify(Command):
 @register_command
 class AutoDuck(Command):
     """Reduces (ducks) the volume of one or more tracks whenever the volume of a specified "control" track reaches a particular level. Typically used to make a music track softer whenever speech in a commentary track is heard."""
+
     # TODO
     # double DuckAmountDb, (default:-12)
     # double InnerFadeDownLen, (default:0)
@@ -1057,6 +1057,7 @@ class AutoDuck(Command):
 @register_command
 class BassAndTreble(Command):
     """Increases or decreases the lower  frequencies  and higher frequencies of your audio independently; behaves just like the bass and treble controls on a stereo system."""
+
     # TODO
     # double Bass, (default:0)
     # double Treble, (default:0)
@@ -1067,6 +1068,7 @@ class BassAndTreble(Command):
 @register_command
 class ChangePitch(Command):
     """Change the pitch of a selection without changing its tempo."""
+
     # TODO
     # double Percentage, (default:0)
     # bool SBSMS, (default:False)
@@ -1075,6 +1077,7 @@ class ChangePitch(Command):
 @register_command
 class ChangeSpeed(Command):
     """Change the speed of a selection, also changing its pitch."""
+
     # TODO
     # double Percentage, (default:0)
 
@@ -1082,6 +1085,7 @@ class ChangeSpeed(Command):
 @register_command
 class ChangeTempo(Command):
     """Change the tempo and length (duration) of a selection without changing its pitch."""
+
     # TODO
     # double Percentage, (default:0)
     # bool SBSMS, (default:False)
@@ -1090,6 +1094,7 @@ class ChangeTempo(Command):
 @register_command
 class ClickRemoval(Command):
     """Click Removal is designed to remove clicks on audio tracks and is especially suited to declicking recordings made from vinyl records."""
+
     # TODO
     # int Threshold, (default:200)
     # int Width, (default:20)
@@ -1098,6 +1103,7 @@ class ClickRemoval(Command):
 @register_command
 class Compressor(Command):
     """Compresses the dynamic range by two alternative methods. The default "RMS" method makes the louder parts softer, but leaves the quieter audio alone. The alternative "peaks" method makes the entire audio louder, but amplifies the louder parts less than the quieter parts. Make-up gain can be applied to either method, making the result as loud as possible without clipping, but not changing the dynamic range further."""
+
     # TODO
     # double Threshold, (default:-12)
     # double NoiseFloor, (default:-40)
@@ -1111,6 +1117,7 @@ class Compressor(Command):
 @register_command
 class Distortion(Command):
     """Use the Distortion effect to make the audio sound distorted. By distorting the waveform the frequency content is changed, which will often make the sound "crunchy" or "abrasive".  Technically this effect is a waveshaper. The result of waveshaping is equivalent to applying non-linear amplification to the audio waveform. Preset shaping functions are provided, each of which produces a different type of distortion."""
+
     # TODO
     # enum Type, (default:Hard Clipping)
     #  Hard Clipping
@@ -1135,6 +1142,7 @@ class Distortion(Command):
 @register_command
 class Echo(Command):
     """Repeats the selected audio again and again, normally softer each time and normally not blended into the original sound until some time after it starts. The delay time between each repeat is fixed, with no pause in between each repeat. For a more configurable echo effect with a variable delay time and pitch-changed echoes, see Delay."""
+
     # TODO
     # float Delay, (default:1)
     # float Decay, (default:0.5)
@@ -1153,6 +1161,7 @@ class FadeOut(Command):
 @register_command
 class FilterCurve(Command):
     """Adjusts the volume levels of particular frequencies"""
+
     # TODO
     # size_t FilterLength, (default:8191)
     # bool InterpolateLin, (default:False)
@@ -1168,6 +1177,7 @@ class FilterCurve(Command):
 @register_command
 class GraphicEq(Command):
     """Adjusts the volume levels of particular frequencies"""
+
     # TODO
     # size_t FilterLength, (default:8191)
     # bool InterpolateLin, (default:False)
@@ -1188,6 +1198,7 @@ class Invert(Command):
 @register_command
 class LoudnessNormalization(Command):
     """Changes the perceived loudness of the audio."""
+
     # TODO
     # bool StereoIndependent, (default:False)
     # double LUFSLevel, (default:-23)
@@ -1204,6 +1215,7 @@ class NoiseReduction(Command):
 @register_command
 class Normalize(Command):
     """Use the Normalize effect to set the maximum amplitude of a track, equalize the amplitudes of the left and right channels of a stereo track and optionally remove any DC offset from the track"""
+
     # TODO
     # double PeakLevel, (default:-1)
     # bool ApplyGain, (default:True)
@@ -1214,6 +1226,7 @@ class Normalize(Command):
 @register_command
 class Paulstretch(Command):
     """Use Paulstretch only for an extreme time-stretch or "stasis" effect, This may be useful for synthesizer pad sounds, identifying performance glitches or just creating interesting aural textures. Use Change Tempo or Sliding Time Scale rather than Paulstretch for tasks like slowing down a song to a "practice" tempo."""
+
     # TODO
     # float Stretch Factor, (default:10)
     # float Time Resolution, (default:0.25)
@@ -1222,6 +1235,7 @@ class Paulstretch(Command):
 @register_command
 class Phaser(Command):
     """The name "Phaser" comes from "Phase Shifter", because it works by combining phase-shifted signals with the original signal.  The movement of the phase-shifted signals is controlled using a Low Frequency Oscillator (LFO)."""
+
     # TODO
     # int Stages, (default:2)
     # int DryWet, (default:128)
@@ -1240,6 +1254,7 @@ class Repair(Command):
 @register_command
 class Repeat(Command):
     """Repeats the selection the specified number of times."""
+
     # TODO
     # int Count, (default:1)
 
@@ -1247,6 +1262,7 @@ class Repeat(Command):
 @register_command
 class Reverb(Command):
     """A configurable stereo reverberation effect with built-in and user-added presets. It can be used to add ambience (an impression of the space in which a sound occurs) to a mono sound. Also use it to increase reverberation in stereo audio that sounds too "dry" or "close"."""
+
     # TODO
     # double RoomSize, (default:75)
     # double Delay, (default:10)
@@ -1268,6 +1284,7 @@ class Reverse(Command):
 @register_command
 class SlidingStretch(Command):
     """This effect allows you to make a continuous change to the tempo and/or pitch of a selection by choosing initial and/or final change values."""
+
     # TODO
     # double RatePercentChangeStart, (default:0)
     # double RatePercentChangeEnd, (default:0)
@@ -1280,6 +1297,7 @@ class SlidingStretch(Command):
 @register_command
 class TruncateSilence(Command):
     """Automatically try to find and eliminate audible silences. Do not use this with faded audio."""
+
     # TODO
     # double Threshold, (default:-20)
     # enum Action, (default:Truncate Detected Silence)
@@ -1295,6 +1313,7 @@ class TruncateSilence(Command):
 @register_command
 class Wahwah(Command):
     """Rapid tone quality variations, like that guitar sound so popular in the 1970's."""
+
     # TODO
     # double Freq, (default:1.5)
     # double Phase, (default:0)
@@ -1307,6 +1326,7 @@ class Wahwah(Command):
 @register_command
 class AdjustableFade(Command):
     """enables you to control the shape of the fade (non-linear fading) to be applied by adjusting various parameters; allows partial (that is not from or to zero) fades up or down."""
+
     # TODO
     # enum type, (default:Up)
     #  Up
@@ -1340,6 +1360,7 @@ class AdjustableFade(Command):
 @register_command
 class ClipFix(Command):
     """Clip Fix attempts to reconstruct clipped regions by interpolating the lost signal."""
+
     # TODO
     # double threshold, (default:0)
     # double gain, (default:0)
@@ -1348,6 +1369,7 @@ class ClipFix(Command):
 @register_command
 class CrossfadeClips(Command):
     """Use Crossfade Clips to apply a simple crossfade to a selected pair of clips in a single audio track."""
+
     # TODO
     #
 
@@ -1355,6 +1377,7 @@ class CrossfadeClips(Command):
 @register_command
 class CrossfadeTracks(Command):
     """Use Crossfade Tracks to make a smooth transition between two overlapping tracks one above the other. Place the track to be faded out above the track to be faded in then select the overlapping region in both tracks and apply the effect."""
+
     # TODO
     # enum type, (default:ConstantGain)
     #  ConstantGain
@@ -1372,6 +1395,7 @@ class CrossfadeTracks(Command):
 @register_command
 class Delay(Command):
     """A configurable delay effect with variable delay time and pitch shifting of the delays."""
+
     # TODO
     # enum delay-type, (default:Regular)
     #  Regular
@@ -1394,6 +1418,7 @@ class Delay(Command):
 @register_command
 class HighPassFilter(Command):
     """Passes frequencies above its cutoff frequency and attenuates frequencies below its cutoff frequency."""
+
     # TODO
     # double frequency, (default:0)
     # enum rolloff, (default:dB6)
@@ -1408,6 +1433,7 @@ class HighPassFilter(Command):
 @register_command
 class Limiter(Command):
     """Limiter passes signals below a specified input level unaffected or gently reduced, while preventing the peaks of stronger signals from exceeding this threshold.  Mastering engineers often use this type of dynamic range compression combined with make-up gain to increase the perceived loudness of an audio recording during the audio mastering process."""
+
     # TODO
     # enum type, (default:SoftLimit)
     #  SoftLimit
@@ -1427,6 +1453,7 @@ class Limiter(Command):
 @register_command
 class LowPassFilter(Command):
     """Passes frequencies below its cutoff frequency and attenuates frequencies above its cutoff frequency."""
+
     # TODO
     # double frequency, (default:0)
     # enum rolloff, (default:dB6)
@@ -1441,6 +1468,7 @@ class LowPassFilter(Command):
 @register_command
 class NotchFilter(Command):
     """Greatly attenuate ("notch out"), a narrow frequency band. This is a good way to remove mains hum or a whistle confined to a specific frequency with minimal damage to the remainder of the audio."""
+
     # TODO
     # double frequency, (default:0)
     # double q, (default:0)
@@ -1449,6 +1477,7 @@ class NotchFilter(Command):
 @register_command
 class SpectralEditMultiTool(Command):
     """When the selected track is in spectrogram or spectrogram log(f) view, applies a  notch filter, high pass filter or low pass filter according to the spectral selection made. This effect can also be used to change the audio quality as an alternative to using Equalization."""
+
     # TODO
     #
 
@@ -1456,6 +1485,7 @@ class SpectralEditMultiTool(Command):
 @register_command
 class SpectralEditParametricEq(Command):
     """When the selected track is in spectrogram or spectrogram log(f) view and the spectral selection has a center frequency and an upper and lower boundary, performs the specified band cut or band boost. This can be used as an alternative to Equalization or may also be useful to repair damaged audio by reducing frequency spikes or boosting other frequencies to mask spikes."""
+
     # TODO
     # double control-gain, (default:0)
 
@@ -1463,6 +1493,7 @@ class SpectralEditParametricEq(Command):
 @register_command
 class SpectralEditShelves(Command):
     """When the selected track is in spectrogram or spectrogram log(f) view, applies either a low- or high-frequency shelving filter or both filters, according to the spectral selection made. This can be used as an alternative to Equalization or may also be useful to repair damaged audio by reducing frequency spikes or boosting other frequencies to mask spikes."""
+
     # TODO
     # double control-gain, (default:0)
 
@@ -1470,6 +1501,7 @@ class SpectralEditShelves(Command):
 @register_command
 class StudioFadeOut(Command):
     """Applies a more musical fade out to the selected audio, giving a more pleasing sounding result."""
+
     # TODO
     #
 
@@ -1477,6 +1509,7 @@ class StudioFadeOut(Command):
 @register_command
 class Tremolo(Command):
     """Modulates the volume of the selection at the depth and rate selected in the dialog. The same as the tremolo effect familiar to guitar and keyboard players."""
+
     # TODO
     # enum wave, (default:Sine)
     #  Sine
@@ -1492,6 +1525,7 @@ class Tremolo(Command):
 @register_command
 class VocalReductionAndIsolation(Command):
     """Attempts to remove or isolate center-panned audio from a stereo track.  Most  "Remove" options in this effect preserve the stereo image."""
+
     # TODO
     # enum action, (default:RemoveToMono)
     #  RemoveToMono
@@ -1511,6 +1545,7 @@ class VocalReductionAndIsolation(Command):
 @register_command
 class Vocoder(Command):
     """Synthesizes audio (usually a voice) in the left channel of a stereo track with a carrier wave (typically white noise) in the right channel to produce a modified version of the left channel. Vocoding a normal voice with white noise will produce a robot-like voice for special effects."""
+
     # TODO
     # double dst, (default:0)
     # enum mst, (default:BothChannels)
@@ -1542,6 +1577,7 @@ class PlotSpectrum(Command):
 @register_command
 class FindClipping(Command):
     """Displays runs of clipped samples in a Label Track, as a screen-reader accessible alternative to View > Show Clipping in Waveform. A run must include at least one clipped sample, but may include unclipped samples too."""
+
     # TODO
     # int Duty Cycle Start, (default:3)
     # int Duty Cycle End, (default:3)
@@ -1550,6 +1586,7 @@ class FindClipping(Command):
 @register_command
 class BeatFinder(Command):
     """Attempts to place labels at beats which are much louder than the surrounding audio. It's a fairly rough and ready tool, and will not necessarily work well on a typical modern pop music track with compressed dynamic range. If you do not get enough beats detected, try reducing the "Threshold Percentage" setting."""
+
     # TODO
     # int thresval, (default:0)
 
@@ -1557,6 +1594,7 @@ class BeatFinder(Command):
 @register_command
 class LabelSounds(Command):
     """Divides up a track by placing labels for areas of sound that are separated by silence."""
+
     # TODO
     # double threshold, (default:0)
     # enum measurement, (default:peak)
@@ -1595,6 +1633,7 @@ class ApplyMacro(Command):
 @register_command
 class Screenshot(Command):
     """A tool, mainly used in documentation, to capture screenshots of Audacity."""
+
     # TODO
     # string Path, (default:)
     # enum CaptureWhat, (default:Window)
@@ -1648,6 +1687,7 @@ class Benchmark(Command):
 @register_command
 class NyquistPrompt(Command):
     """Brings up a dialog where you can enter Nyquist commands. Nyquist is a programming language for generating, processing and analyzing audio."""
+
     # TODO
     # string Command, (default:)
     # int Version, (default:3)
@@ -1656,6 +1696,7 @@ class NyquistPrompt(Command):
 @register_command
 class NyquistPlugInInstaller(Command):
     """A  Nyquist plugin that simplifies the installation of other Nyquist plugins."""
+
     # TODO
     # string files, (default:)
     # enum overwrite, (default:Disallow)
@@ -1667,6 +1708,7 @@ class NyquistPlugInInstaller(Command):
 @register_command
 class RegularIntervalLabels(Command):
     """Places labels in a long track so as to divide it into smaller, equally sized  segments."""
+
     # TODO
     # enum mode, (default:Both)
     #  Both
@@ -1700,6 +1742,7 @@ class RegularIntervalLabels(Command):
 @register_command
 class SampleDataExport(Command):
     """Reads the values of successive samples from the selected audio and prints this data to a plain text, CSV or HTML file."""
+
     # TODO
     # int number, (default:0)
     # enum units, (default:dB)
@@ -1734,6 +1777,7 @@ class SampleDataExport(Command):
 @register_command
 class SampleDataImport(Command):
     """Reads numeric values from a plain ASCII text file and creates a PCM sample for each numeric value read."""
+
     # TODO
     # string filename, (default:)
     # enum bad-data, (default:ThrowError)
@@ -2215,6 +2259,7 @@ class TrackMoveBottom(Command):
 @register_command
 class SelectTime(Command):
     """Modifies the temporal selection.  Start and End are time.  FromEnd allows selection from the end, which is handy to fade in and fade out a track."""
+
     # TODO
     # double Start, (default:unchanged)
     # double End, (default:unchanged)
@@ -2231,6 +2276,7 @@ class SelectTime(Command):
 @register_command
 class SelectFrequencies(Command):
     """Modifies what frequencies are selected.  High and Low are for spectral selection."""
+
     # TODO
     # double High, (default:unchanged)
     # double Low, (default:unchanged)
@@ -2239,6 +2285,7 @@ class SelectFrequencies(Command):
 @register_command
 class SelectTracks(Command):
     """Modifies which tracks are selected.  First and Last are track numbers.  High and Low are for spectral selection.  The Mode parameter allows complex selections, e.g adding or removing tracks from the current selection."""
+
     # TODO
     # double Track, (default:unchanged)
     # double TrackCount, (default:unchanged)
@@ -2252,6 +2299,7 @@ class SelectTracks(Command):
 @register_command
 class SetTrackStatus(Command):
     """Sets properties for a track or channel (or both).Name is used to set the name.  It is not used in choosing the track."""
+
     # TODO
     # string Name, (default:unchanged)
     # bool Selected, (default:unchanged)
@@ -2261,6 +2309,7 @@ class SetTrackStatus(Command):
 @register_command
 class SetTrackAudio(Command):
     """Sets properties for a track or channel (or both).  Can set pan, gain, mute and solo."""
+
     # TODO
     # bool Mute, (default:unchanged)
     # bool Solo, (default:unchanged)
@@ -2271,6 +2320,7 @@ class SetTrackAudio(Command):
 @register_command
 class SetTrackVisuals(Command):
     """Sets visual properties for a track or channel (or both).  SpectralPrefs=1 sets the track to use general preferences, SpectralPrefs=1 per track prefs. When using general preferences, SetPreferences can be used to change a preference and so affect display of the track."""
+
     # TODO
     # int Height, (default:unchanged)
     # enum Display, (default:unchanged)
@@ -2308,6 +2358,7 @@ class SetTrackVisuals(Command):
 @register_command
 class GetPreference(Command):
     """Gets a single preference setting."""
+
     # TODO
     # string Name, (default:)
 
@@ -2315,6 +2366,7 @@ class GetPreference(Command):
 @register_command
 class SetPreference(Command):
     """Sets a single preference setting.  Some settings such as them changes require a reload (use Reload=1), but this takes time and slows down a script."""
+
     # TODO
     # string Name, (default:)
     # string Value, (default:)
@@ -2324,6 +2376,7 @@ class SetPreference(Command):
 @register_command
 class SetClip(Command):
     """Modify a clip by stating the track or channel a time within it. Color and start position can be set.  Try to avoid overlapping clips, as Audacity will allow it, but does not like them."""
+
     # TODO
     # double At, (default:unchanged)
     # enum Color, (default:unchanged)
@@ -2338,6 +2391,7 @@ class SetClip(Command):
 @register_command
 class SetProject(Command):
     """Sets the project window to a particular location and size.  Can also change the caption - but that is cosmetic and may be overwritten again  later by Audacity."""
+
     # TODO
     # string Name, (default:unchanged)
     # double Rate, (default:unchanged)
@@ -2350,6 +2404,7 @@ class SetProject(Command):
 @register_command
 class Select(Command):
     """Selects audio.  Start and End are time.  First and Last are track numbers.  High and Low are for spectral selection.  FromEnd allows selection from the end, which is handy to fade in and fade out a track.  The Mode parameter allows complex selections, e.g adding or removing tracks from the current selection."""
+
     # TODO
     # double Start, (default:unchanged)
     # double End, (default:unchanged)
@@ -2375,6 +2430,7 @@ class Select(Command):
 @register_command
 class SetTrack(Command):
     """Sets properties for a track or channel (or both).  Setting one channel of a stereo track can lead to interesting results.  That's most used when setting relative sizing of the two channels.  SpectralPrefs=1 sets the track to use general preferences, SpectralPrefs=1 per track prefs. When using general preferences, SetPreferences can be used to change a preference and so affect display of the track.  Name is used to set the name.  It is not used in choosing the track."""
+
     # TODO
     # string Name, (default:unchanged)
     # bool Selected, (default:unchanged)
@@ -2413,6 +2469,7 @@ class SetTrack(Command):
 @register_command
 class GetInfo(Command):
     """Gets information in a list in one of three formats."""
+
     # TODO
     # enum Type, (default:Commands)
     #  Commands
@@ -2433,6 +2490,7 @@ class GetInfo(Command):
 @register_command
 class Message(Command):
     """Used in testing.  Sends the Text string back to you."""
+
     # TODO
     # string Text, (default:Some message)
 
@@ -2440,6 +2498,7 @@ class Message(Command):
 @register_command
 class Help(Command):
     """This is an extract from GetInfo Commands, with just one command."""
+
     # TODO
     # string Command, (default:Help)
     # enum Format, (default:JSON)
@@ -2452,6 +2511,7 @@ class Help(Command):
 @register_command
 class Import2(Command):
     """Imports from a file.  The automation command uses a text box to get the file name rather than a normal file-open dialog."""
+
     # TODO
     # string Filename, (default:)
 
@@ -2459,6 +2519,7 @@ class Import2(Command):
 @register_command
 class Export2(Command):
     """Exports selected audio to a named file.  This version of export has the full set of export options.  However, a current limitation is that the detailed option settings are always stored to and taken from saved preferences.  The net effect is that for a given format, the most recently used options for that format will be used. In the current implementation, NumChannels should be 1 (mono) or 2 (stereo)."""
+
     # TODO
     # string Filename, (default:exported.wav)
     # int NumChannels, (default:1)
@@ -2467,6 +2528,7 @@ class Export2(Command):
 @register_command
 class OpenProject2(Command):
     """Opens a project."""
+
     # TODO
     # string Filename, (default:test.aup3)
     # bool AddToHistory, (default:false)
@@ -2475,6 +2537,7 @@ class OpenProject2(Command):
 @register_command
 class SaveProject2(Command):
     """Saves a project."""
+
     # TODO
     # string Filename, (default:name.aup3)
     # bool AddToHistory, (default:False)
@@ -2484,6 +2547,7 @@ class SaveProject2(Command):
 @register_command
 class Drag(Command):
     """Experimental command (called Drag in scripting) that moves the mouse.  An Id can be used to move the mouse into a button to get the hover effect.  Window names can be used instead.  If To is specified, the command does a drag, otherwise just a hover."""
+
     # TODO
     # int Id, (default:unchanged)
     # string Window, (default:unchanged)
@@ -2502,6 +2566,7 @@ class Drag(Command):
 @register_command
 class CompareAudio(Command):
     """Compares selected range on two tracks.  Reports on the differences and similarities."""
+
     # TODO
     # float Threshold, (default:0)
 
