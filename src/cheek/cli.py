@@ -12,6 +12,11 @@ import cheek.commands
 
 log = logging.getLogger()
 
+# TODO: Need better handling of enum parameter types. We should detect them
+# when building the CLI and create the appropriate type of click option
+# that takes the possible enum values into account.
+#
+# A good example of one of these is `Chirp`.
 
 def field_info_to_click_type(field_info: pydantic.fields.FieldInfo):
     "Determine the click type from a pydantic FieldInfo."
