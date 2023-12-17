@@ -1,0 +1,37 @@
+[build-system]
+build-backend = 'setuptools.build_meta'
+# Minimum requirements for the build system to execute.
+requires = ["setuptools>=49.9.0"]  # PEP 508 specifications.
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+testpaths = [
+    "tests",
+]
+norecursedirs= [
+    "tests/helpers",
+    "tests/data",
+]
+
+# The test suite doesn't work with pytest og capturing enabled.
+# See https://github.com/pallets/click/issues/824
+log_cli = false
+log_cli_level = "WARNING"
+
+[tool.black]
+line-length = 100
+exclude = '''
+/(
+    \.git
+  | \.hypothesis
+  | \.tox
+  | \.vscode
+  | \__pycache__
+  | build
+  | dist
+  | docs
+)/
+'''
+
+[tool.flake8]
+max-line-length = 120
