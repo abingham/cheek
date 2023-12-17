@@ -4,7 +4,7 @@
 from enum import Enum
 import logging
 from types import NoneType, UnionType
-from typing import Any, Type
+from typing import Any, Optional, Type
 
 import click
 import pydantic.fields
@@ -26,6 +26,10 @@ def field_info_to_python_type(field_info: pydantic.fields.FieldInfo):
 
     assert ann is not None, "Should not have None field type"
 
+    # TODO: Handle Optional[X]. Also, understand when we see it.
+    if "Optional" in str(ann):
+        breakpoint()
+
     # If ann is a Union, we return the first non-NoneType type.
     # TODO: What's the right way to iterate a union's types?
     if isinstance(ann, UnionType):
@@ -37,7 +41,7 @@ def field_info_to_python_type(field_info: pydantic.fields.FieldInfo):
     return ann
 
 
-def construct_command_from_kwargs(
+def create_command_from_kwargs(
     command_class: Type[cheek.commands.Command], kwargs: dict[str, Any]
 ) -> cheek.commands.Command:
     """Construct a Command instance from click kwargs.
@@ -64,8 +68,6 @@ def construct_command_from_kwargs(
 def create_click_param(field_name: str, field_info: pydantic.fields.FieldInfo) -> click.Parameter:
     "Create a click Parameter from a pydantic field."
     python_type = field_info_to_python_type(field_info)
-    # if isinstance(python_type, Enum):
-    #     breakpoint()
     return click.Option(
         [f"--{field_name}"],
         type=python_type,
@@ -79,7 +81,7 @@ def create_click_callback(command_class):
     "Create a callback for a click command from a Command class."
 
     def cmd_func(**kwargs):
-        command_instance = construct_command_from_kwargs(command_class, kwargs)
+        command_instance = create_command_from_kwargs(command_class, kwargs)
         log.info(command_instance)
         results = cheek.commands.do(command_instance)
         print(results)
@@ -87,7 +89,7 @@ def create_click_callback(command_class):
     return cmd_func
 
 
-def build_cli():
+def create_cli():
     """Build the command group for the CLI.
 
     Returns:
@@ -120,4 +122,5 @@ if __name__ == "__main__":
     # TODO: Make this configurable
     logging.basicConfig(level=logging.INFO)
 
-    build_cli()()
+    cli = create_cli()
+    cli()

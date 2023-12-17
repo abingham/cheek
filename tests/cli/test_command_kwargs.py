@@ -1,9 +1,9 @@
-from cheek.cli import construct_command_from_kwargs
+from cheek.cli import create_command_from_kwargs
 from cheek.commands import SetLabel, Open
 
 
 def test_set_label():
-    cmd = construct_command_from_kwargs(
+    cmd = create_command_from_kwargs(
         SetLabel,
         {
             "label": 0,
@@ -21,7 +21,7 @@ def test_set_label():
 
 
 def test_open():
-    cmd = construct_command_from_kwargs(
+    cmd = create_command_from_kwargs(
         Open,
         {
             "filename": "foo.txt",
