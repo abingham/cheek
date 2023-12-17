@@ -6,7 +6,6 @@ replace its core functionality.
 
 import time
 from enum import Enum
-from pathlib import Path
 from typing import Type
 
 import pyaudacity
@@ -15,6 +14,8 @@ from typing_extensions import Annotated
 
 
 class Command(BaseModel):
+    "Base of all commands."
+
     @property
     def command(self):
         "The command string what will be send to Audacity."
@@ -36,7 +37,6 @@ class Command(BaseModel):
     def user_name(cls):
         "The visual name of the command (i.e. for user interfaces)."
         return cls.__name__
-
 
 
 def do(*commands: Command, intercommand_delay=0.001) -> list[str]:
@@ -62,10 +62,12 @@ _command_classes: list[Type[Command]] = []
 
 
 def all_command_classes():
+    "All registered Command subclasses."
     return list(_command_classes)
 
 
 def register_command(cls):
+    "Class decorator to register Command subclass."
     _command_classes.append(cls)
     return cls
 
@@ -78,8 +80,6 @@ class New(Command):
     NOTE: The macros issued from pyaudacity always apply to the last Audacity
     window opened. There's no way to pick which Audacity window macros are
     applied to."""
-
-    pass
 
 
 # The open() function uses the OpenProject2 macro, not the Open macro which only opens the Open dialog.
@@ -99,1372 +99,6 @@ class Open(Command):
 class Close(Command):
     """Closes the current project window, prompting you to save your work if you have not saved."""
 
-    pass
-
-
-def page_setup():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Opens the standard Page Setup dialog box prior to printing.
-    """
-    return do("PageSetup")
-
-
-def print():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Prints all the waveforms in the current project window (and the contents of Label Tracks or other tracks), with the Timeline above. Everything is printed to one page.
-    """
-    return do("Print")
-
-
-def exit():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Closes all project windows and exits Audacity. If there are any unsaved changes to your project, Audacity will ask if you want to save them.
-    """
-    return do("Exit")
-
-
-# The save() function uses the SaveProject2 macro, not the Save macro which only opens the Save dialog.
-def save(filename, add_to_history=False, compress=False, allow_overwrite=True):
-    # type: (Union[str, Path], bool, bool, bool) -> str
-    """Saves the current Audacity project .AUP3 file."""
-
-    # Audacity will display a pop-up dialog if we try to save with an existing filename.
-    if allow_overwrite and Path(filename).exists():
-        os.unlink(Path(filename))
-
-    if not isinstance(add_to_history, bool):
-        raise PyAudacityException(
-            "add_to_history argument must be a bool, not" + str(type(add_to_history))
-        )
-    if not isinstance(compress, bool):
-        raise PyAudacityException("compress argument must be a bool, not" + str(type(compress)))
-
-    return do(
-        'SaveProject2: Filename="{}" AddToHistory="{}" Compress="{}"'.format(
-            filename, add_to_history, compress
-        )
-    )
-
-
-def save_as():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Same as save(), but allows you to save a copy of an open project
-    to a different name or location."""
-
-    return do("SaveAs")
-
-
-def export_mp3():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Exports to an MP3 file."""
-
-    return do("ExportMp3")
-
-
-def export_wav():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Exports to an WAV file."""
-
-    return do("ExportWav")
-
-
-def export_ogg():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Exports to an OGG file."""
-
-    return do("ExportOgg")
-
-
-# The export() function uses the Export2 macro, not the Export macro which only opens the Export Audio dialog.
-def export(filename, num_channels=1):
-    # type: (Union[str, Path], int) -> str
-    """TODO
-
-    Audacity Documentation: Exports selected audio to a named file. This version of export has the full set of export options. However, a current limitation is that the detailed option settings are always stored to and taken from saved preferences. The net effect is that for a given format, the most recently used options for that format will be used. In the current implementation, NumChannels should be 1 (mono) or 2 (stereo).
-    """
-
-    if not os.path.exists(filename):
-        raise PyAudacityException(str(filename) + " file not found.")
-    if not isinstance(num_channels, int):
-        raise PyAudacityException(
-            "num_channels argument must be a int, not" + str(type(num_channels))
-        )
-
-    return do('Export2: Filename="{}" NumChannels="{}"'.format(filename, num_channels))
-
-
-def export_sel():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Opens the Export Audio dialog to export the selected audio.
-    """
-
-    return do("ExportSel")
-
-
-def export_labels():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Opens the Exports Labels dialog."""
-
-    return do("ExportLabels")
-
-
-def export_multiple():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Opens the Exports Multiple dialog."""
-
-    return do("ExportMultiple")
-
-
-def export_midi():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Opens the Export MIDI As dialog."""
-
-    return do("ExportMIDI")
-
-
-# The import_audio() function uses the Import2 macro, not the ImportAudio macro which only opens the Import Audio dialog.
-def import_audio(filename):
-    # type: (Union[str, Path]) -> str
-    """TODO
-
-    Audacity Documentation: Imports from a file. The automation command uses a text box to get the file name rather than a normal file-open dialog.
-
-    Note that this function is named import_audio() because import is a Python keyword.
-    """
-
-    if not os.path.exists(filename):
-        raise PyAudacityException(str(filename) + " file not found.")
-
-    return do("ImportAudio")
-
-
-def import_labels():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Open the Import Labels dialog."""
-
-    return do("ImportLabels")
-
-
-def import_midi():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Opens the Import MIDI dialog."""
-
-    return do("ImportMIDI")
-
-
-def import_raw():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Opens the Import Raw dialog."""
-
-    return do("ImportRaw")
-
-
-def undo():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Undoes the most recent editing action."""
-
-    return do("Undo")
-
-
-def redo():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Redoes the most recently undone editing action."""
-
-    return do("Redo")
-
-
-def cut():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Removes the selected audio data and/or labels and places these on the Audacity clipboard. By default, any audio or labels to right of the selection are shifted to the left.
-    """
-
-    return do("Cut")
-
-
-def delete():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Removes the selected audio data and/or labels without copying these to the Audacity clipboard. By default, any audio or labels to right of the selection are shifted to the left.
-    """
-    return do("Delete")
-
-
-def copy():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Copies the selected audio data to the Audacity clipboard without removing it from the project.
-    """
-    return do("Copy")
-
-
-def paste():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Inserts whatever is on the Audacity clipboard at the position of the selection cursor in the project, replacing whatever audio data is currently selected, if any.
-    """
-    return do("Paste")
-
-
-def duplicate():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Creates a new track containing only the current selection as a new clip.
-    """
-    return do("Duplicate")
-
-
-def edit_meta_data():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Open the Edit Metadata Tags dialog."""
-    return do("EditMetaData")
-
-
-def preferences():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Open the Preferences dialog."""
-    return do("Preferences")
-
-
-def split_cut():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Same as Cut, but none of the audio data or labels to right of the selection are shifted.
-    """
-    return do("SplitCut")
-
-
-def split_delete():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Same as Delete, but none of the audio data or labels to right of the selection are shifted.
-    """
-    return do("SplitDelete")
-
-
-def silence():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Replaces the currently selected audio with absolute silence. Does not affect label tracks.
-    """
-    return do("Silence")
-
-
-def trim():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Deletes all audio but the selection. If there are other separate clips in the same track these are not removed or shifted unless trimming the entire length of a clip or clips. Does not affect label tracks.
-    """
-    return do("Trim")
-
-
-def split():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Splits the current clip into two clips at the cursor point, or into three clips at the selection boundaries.
-    """
-    return do("Split")
-
-
-def split_new():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Does a Split Cut on the current selection in the current track, then creates a new track and pastes the selection into the new track.
-    """
-    return do("SplitNew")
-
-
-def join():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: If you select an area that overlaps one or more clips, they are all joined into one large clip. Regions in-between clips become silence.
-    """
-    return do("Join")
-
-
-def disjoin():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: In a selection region that includes absolute silences, creates individual non-silent clips between the regions of silence. The silence becomes blank space between the clips.
-    """
-    return do("Disjoin")
-
-
-def edit_labels():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Open the Edit Labels dialog."""
-    return do("EditLabels")
-
-
-def add_label():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Creates a new, empty label at the cursor or at the selection region.
-    """
-    return do("AddLabel")
-
-
-def add_label_playing():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Creates a new, empty label at the current playback or recording position.
-    """
-    return do("AddLabelPlaying")
-
-
-def paste_new_label():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Pastes the text on the Audacity clipboard at the cursor position in the currently selected label track. If there is no selection in the label track a point label is created. If a region is selected in the label track a region label is created. If no label track is selected one is created, and a new label is created.
-    """
-    return do("PasteNewLabel")
-
-
-def type_to_create_label():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Creates a new label and allows the user to type to fill it out.
-    """
-    return do("TypeToCreateLabel")
-
-
-def cut_labels():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Removes the selected labels and places these on the Audacity clipboard. By default, any audio or labels to right of the selection are shifted to the left.
-    """
-    return do("CutLabels")
-
-
-def delete_labels():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Removes the selected labels without copying these to the Audacity clipboard. By default, any audio or labels to right of the selection are shifted to the left.
-    """
-    return do("DeleteLabels")
-
-
-def split_cut_labels():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Removes the selected labels and places these on the Audacity clipboard, but none of the audio data or labels to right of the selection are shifted.
-    """
-    return do("SplitCutLabels")
-
-
-def split_delete_labels():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Removes the selected labels without copying these to the Audacity clipboard, but none of the audio data or labels to right of the selection are shifted.
-    """
-    return do("SplitDeleteLabels")
-
-
-def copy_labels():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Copies the selected labels to the Audacity clipboard without removing it from the project.
-    """
-    return do("CopyLabels")
-
-
-def split_labels():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Splits the current labeled audio regions into two regions at the cursor point, or into three regions at the selection boundaries.
-    """
-    return do("SplitLabels")
-
-
-def join_labels():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: If you select an area that overlaps one or more labeled audio regions, they are all joined into one large clip.
-    """
-    return do("JoinLabels")
-
-
-def disjoin_labels():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Same as the Detach at Silences command, but operates on labeled audio regions.
-    """
-    return do("DisjoinLabels")
-
-
-def select_all():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Selects all of the audio in all of the tracks."""
-    return do("SelectAll")
-
-
-def select_none():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Deselects all of the audio in all of the tracks."""
-    return do("SelectNone")
-
-
-def sel_cursor_stored_cursor():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Selects from the position of the cursor to the previously stored cursor position.
-    """
-    return do("SelCursorStoredCursor")
-
-
-def store_cursor_position():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Stores the current cursor position for use in a later selection.
-    """
-    return do("StoreCursorPosition")
-
-
-def zero_cross():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Moves the edges of a selection region (or the cursor position) slightly so they are at a rising zero crossing point.
-    """
-    return do("ZeroCross")
-
-
-def sel_all_tracks():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Extends the current selection up and/or down into all tracks in the project.
-    """
-    return do("SelAllTracks")
-
-
-def sel_sync_lock_tracks():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Extends the current selection up and/or down into all sync-locked tracks in the currently selected track group.
-    """
-    return do("SelSyncLockTracks")
-
-
-def left_at_playback_position():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: When Audacity is playing, recording or paused, sets the left boundary of a potential selection by moving the cursor to the current position of the green playback cursor (or red recording cursor). Otherwise, opens the "Set Left Selection Boundary" dialog for adjusting the time position of the left-hand selection boundary. If there is no selection, moving the time digits backwards creates a selection ending at the former cursor position, and moving the time digits forwards provides a way to move the cursor forwards to an exact point.
-    """
-    return do("Left at Playback Position")
-
-
-def right_at_playback_position():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: When Audacity is playing, recording or paused, sets the right boundary of the selection, thus drawing the selection from the cursor position to the current position of the green playback cursor (or red recording cursor). Otherwise, opens the "Set Right Selection Boundary" dialog for adjusting the time position of the right-hand selection boundary. If there is no selection, moving the time digits forwards creates a selection starting at the former cursor position, and moving the time digits backwards provides a way to move the cursor backwards to an exact point.
-    """
-    return do("Right at Playback Position")
-
-
-def sel_track_start_to_cursor():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Selects a region in the selected track(s) from the start of the track to the cursor position.
-    """
-    return do("SelTrackStartToCursor")
-
-
-def sel_cursor_to_track_end():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Selects a region in the selected track(s) from the cursor position to the end of the track.
-    """
-    return do("SelCursorToTrackEnd")
-
-
-def sel_track_start_to_end():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Selects a region in the selected track(s) from the start of the track to the end of the track.
-    """
-    return do("SelTrackStartToEnd")
-
-
-def sel_save():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Stores the end points of a selection for later reuse."""
-    return do("SelSave")
-
-
-def sel_restore():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Retrieves the end points of a previously stored selection.
-    """
-    return do("SelRestore")
-
-
-def toggle_spectral_selection():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Changes between selecting a time range and selecting the last selected spectral selection in that time range. This command toggles the spectral selection even if not in Spectrogram view, but you must be in Spectrogram view to use the spectral selection in one of the Spectral edit effects.
-    """
-    return do("ToggleSpectralSelection")
-
-
-def next_higher_peak_frequency():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: When in Spectrogram view, snaps the center frequency to the next higher frequency peak, moving the spectral selection upwards.
-    """
-    return do("NextHigherPeakFrequency")
-
-
-def next_lower_peak_frequency():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: When in Spectrogram views snaps the center frequency to the next lower frequency peak, moving the spectral selection downwards.
-    """
-    return do("NextLowerPeakFrequency")
-
-
-def sel_prev_clip_boundary_to_cursor():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Selects from the current cursor position back to the right-hand edge of the previous clip.
-    """
-    return do("SelPrevClipBoundaryToCursor")
-
-
-def sel_cursor_to_next_clip_boundary():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Selects from the current cursor position forward to the left-hand edge of the next clip.
-    """
-    return do("SelCursorToNextClipBoundary")
-
-
-def sel_prev_clip():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Moves the selection to the previous clip."""
-    return do("SelPrevClip")
-
-
-def sel_next_clip():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Moves the selection to the next clip."""
-    return do("SelNextClip")
-
-
-def undo_history():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Brings up the History window which can then be left open while using Audacity normally. History lists all undoable actions performed in the current project, including importing.
-    """
-    return do("UndoHistory")
-
-
-def karaoke():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Brings up the Karaoke window, which displays the labels in a "bouncing ball" scrolling display.
-    """
-    return do("Karaoke")
-
-
-def mixer_board():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Mixer Board is an alternative view to the audio tracks in the main tracks window. Analogous to a hardware mixer board, each audio track is displayed in a Track Strip.
-    """
-    return do("MixerBoard")
-
-
-def show_extra_menus():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Shows extra menus with many extra less-used commands."""
-    return do("ShowExtraMenus")
-
-
-def show_clipping():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Option to show or not show audio that is too loud (in red) on the wave form.
-    """
-    return do("ShowClipping")
-
-
-def zoom_in():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Zooms in on the horizontal axis of the audio displaying more detail over a shorter length of time.
-    """
-    return do("ZoomIn")
-
-
-def zoom_normal():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Zooms to the default view which displays about one inch per second.
-    """
-    return do("ZoomNormal")
-
-
-def zoom_out():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Zooms out displaying less detail over a greater length of time.
-    """
-    return do("ZoomOut")
-
-
-def zoom_sel():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Zooms in or out so that the selected audio fills the width of the window.
-    """
-    return do("ZoomSel")
-
-
-def zoom_toggle():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Changes the zoom back and forth between two preset levels.
-    """
-    return do("ZoomToggle")
-
-
-def advanced_v_zoom():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Enable for left-click gestures in the vertical scale to control zooming.
-    """
-    return do("AdvancedVZoom")
-
-
-def fit_in_window():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Zooms out until the entire project just fits in the window.
-    """
-    return do("FitInWindow")
-
-
-def fit_v():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Adjusts the height of all the tracks until they fit in the project window.
-    """
-    return do("FitV")
-
-
-def collapse_all_tracks():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Collapses all tracks to take up the minimum amount of space.
-    """
-    return do("CollapseAllTracks")
-
-
-def expand_all_tracks():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Expands all collapsed tracks to their original size before the last collapse.
-    """
-    return do("ExpandAllTracks")
-
-
-def skip_sel_start():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: When there is a selection, moves the cursor to the start of the selection and removes the selection.
-    """
-    return do("SkipSelStart")
-
-
-def skip_sel_end():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: When there is a selection, moves the cursor to the end of the selection and removes the selection.
-    """
-    return do("SkipSelEnd")
-
-
-def reset_toolbars():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Using this command positions all toolbars in default location and size as they were when Audacity was first installed.
-    """
-    return do("ResetToolbars")
-
-
-def show_transport_t_b():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Controls playback and recording and skips to start or end of project when neither playing or recording.
-    """
-    return do("ShowTransportTB")
-
-
-def show_tools_t_b():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Chooses various tools for selection, volume adjustment, zooming and time-shifting of audio.
-    """
-    return do("ShowToolsTB")
-
-
-def show_record_meter_t_b():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Displays recording levels and toggles input monitoring when not recording.
-    """
-    return do("ShowRecordMeterTB")
-
-
-def show_play_meter_t_b():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Displays playback levels."""
-    return do("ShowPlayMeterTB")
-
-
-def show_mixer_t_b():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Adjusts the recording and playback volumes of the devices currently selected in Device Toolbar.
-    """
-    return do("ShowMixerTB")
-
-
-def show_edit_t_b():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Cut, copy, paste, trim audio, silence audio, undo, redo, zoom tools.
-    """
-    return do("ShowEditTB")
-
-
-def show_transcription_t_b():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Plays audio at a slower or faster speed than normal, affecting pitch.
-    """
-    return do("ShowTranscriptionTB")
-
-
-def show_scrubbing_t_b():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Controls playback and recording and skips to start or end of project when neither playing or recording.
-    """
-    return do("ShowScrubbingTB")
-
-
-def show_device_t_b():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Selects audio host, recording device, number of recording channels and playback device.
-    """
-    return do("ShowDeviceTB")
-
-
-def show_selection_t_b():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Controls the sample rate of the project, snapping to the selection format and adjusts cursor and region position by keyboard input.
-    """
-    return do("ShowSelectionTB")
-
-
-def show_spectral_selection_t_b():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Displays and lets you adjust the current spectral (frequency) selection without having to be in Spectrogram view.
-    """
-    return do("ShowSpectralSelectionTB")
-
-
-def rescan_devices():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Rescan for audio devices connected to your computer, and update the playback and recording dropdown menus in Device Toolbar.
-    """
-    return do("RescanDevices")
-
-
-def play_stop():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Starts and stops playback or stops a recording (stopping does not change the restart position). Therefore using any play or record command after stopping with "Play/Stop" will start playback or recording from the same Timeline position it last started from. You can also assign separate shortcuts for Play and Stop.
-    """
-    return do("PlayStop")
-
-
-def play_stop_select():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Starts playback like "Play/Stop", but stopping playback sets the restart position to the stop point. When stopped, this command is the same as "Play/Stop". When playing, this command stops playback and moves the cursor (or the start of the selection) to the position where playback stopped.
-    """
-    return do("PlayStopSelect")
-
-
-def pause():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Temporarily pauses playing or recording without losing your place.
-    """
-    return do("Pause")
-
-
-def record1st_choice():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Starts recording at the end of the currently selected track(s).
-    """
-    return do("Record1stChoice")
-
-
-def record2nd_choice():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Recording begins on a new track at either the current cursor location or at the beginning of the current selection.
-    """
-    return do("Record2ndChoice")
-
-
-def timer_record():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Brings up the Timer Record dialog."""
-    return do("TimerRecord")
-
-
-def punch_and_roll():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Re-record over audio, with a pre-roll of audio that comes before.
-    """
-    return do("PunchAndRoll")
-
-
-def scrub():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Scrubbing is the action of moving the mouse pointer right or left so as to adjust the position, speed or direction of playback, listening to the audio at the same time.
-    """
-    return do("Scrub")
-
-
-def seek():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Seeking is similar to Scrubbing except that it is playback with skips, similar to using the seek button on a CD player.
-    """
-    return do("Seek")
-
-
-def toggle_scrub_ruler():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Shows (or hides) the scrub ruler, which is just below the timeline.
-    """
-    return do("ToggleScrubRuler")
-
-
-def curs_sel_start():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Moves the left edge of the current selection to the center of the screen, without changing the zoom level.
-    """
-    return do("CursSelStart")
-
-
-def curs_sel_end():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Moves the right edge of the current selection to the center of the screen, without changing the zoom level.
-    """
-    return do("CursSelEnd")
-
-
-def curs_track_start():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Moves the cursor to the start of the selected track."""
-    return do("CursTrackStart")
-
-
-def curs_track_end():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Moves the cursor to the end of the selected track."""
-    return do("CursTrackEnd")
-
-
-def curs_prev_clip_boundary():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Moves the cursor position back to the right-hand edge of the previous clip.
-    """
-    return do("CursPrevClipBoundary")
-
-
-def curs_next_clip_boundary():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Moves the cursor position forward to the left-hand edge of the next clip.
-    """
-    return do("CursNextClipBoundary")
-
-
-def curs_project_start():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Moves the cursor to the beginning of the project."""
-    return do("CursProjectStart")
-
-
-def curs_project_end():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Moves the cursor to the end of the project."""
-    return do("CursProjectEnd")
-
-
-def sound_activation_level():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Sets the activation level above which Sound Activated Recording will record.
-    """
-    return do("SoundActivationLevel")
-
-
-def sound_activation():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Toggles on and off the Sound Activated Recording option."""
-    return do("SoundActivation")
-
-
-def pinned_head():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: You can change Audacity to play and record with a fixed head pinned to the Timeline. You can adjust the position of the fixed head by dragging it.
-    """
-    return do("PinnedHead")
-
-
-def overdub():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Toggles on and off the Overdub option."""
-    return do("Overdub")
-
-
-def s_w_playthrough():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Toggles on and off the Software Playthrough option."""
-    return do("SWPlaythrough")
-
-
-def resample():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Allows you to resample the selected track(s) to a new sample rate for use in the project.
-    """
-    return do("Resample")
-
-
-def remove_tracks():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Removes the selected track(s) from the project. Even if only part of a track is selected, the entire track is removed.
-    """
-    return do("RemoveTracks")
-
-
-def sync_lock():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Ensures that length changes occurring anywhere in a defined group of tracks also take place in all audio or label tracks in that group.
-    """
-    return do("SyncLock")
-
-
-def new_mono_track():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Creates a new empty mono audio track."""
-    return do("NewMonoTrack")
-
-
-def new_stereo_track():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Adds an empty stereo track to the project."""
-    return do("NewStereoTrack")
-
-
-def new_label_track():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Adds an empty label track to the project."""
-    return do("NewLabelTrack")
-
-
-def new_time_track():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Adds an empty time track to the project. Time tracks are used to speed up and slow down audio.
-    """
-    return do("NewTimeTrack")
-
-
-def stereo_to_mono():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Converts the selected stereo track(s) into the same number of mono tracks, combining left and right channels equally by averaging the volume of both channels.
-    """
-    return do("Stereo to Mono")
-
-
-def mix_and_render():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Mixes down all selected tracks to a single mono or stereo track, rendering to the waveform all real-time transformations that had been applied (such as track gain, panning, amplitude envelopes or a change in project rate).
-    """
-    return do("MixAndRender")
-
-
-def mix_and_render_to_new_track():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Same as Tracks > Mix and Render except that the original tracks are preserved rather than being replaced by the resulting "Mix" track.
-    """
-    return do("MixAndRenderToNewTrack")
-
-
-def mute_all_tracks():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Mutes all the audio tracks in the project as if you had used the mute buttons from the Track Control Panel on each track.
-    """
-    return do("MuteAllTracks")
-
-
-def unmute_all_tracks():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Unmutes all the audio tracks in the project as if you had released the mute buttons from the Track Control Panel on each track.
-    """
-    return do("UnmuteAllTracks")
-
-
-def mute_tracks():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Mutes the selected tracks."""
-    return do("MuteTracks")
-
-
-def unmute_tracks():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Unmutes the selected tracks."""
-    return do("UnmuteTracks")
-
-
-def pan_left():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Pan selected audio to left speaker."""
-    return do("PanLeft")
-
-
-def pan_right():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Pan selected audio centrally."""
-    return do("PanRight")
-
-
-def pan_center():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Pan selected audio to right speaker."""
-    return do("PanCenter")
-
-
-def align__end_to_end():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Aligns the selected tracks one after the other, based on their top-to-bottom order in the project window.
-    """
-    return do("Align_EndToEnd")
-
-
-def align__together():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Align the selected tracks so that they start at the same (averaged) start time.
-    """
-    return do("Align_Together")
-
-
-def align__start_to_zero():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Aligns the start of selected tracks with the start of the project.
-    """
-    return do("Align_StartToZero")
-
-
-def align__start_to_sel_start():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Aligns the start of selected tracks with the current cursor position or with the start of the current selection.
-    """
-    return do("Align_StartToSelStart")
-
-
-def align__start_to_sel_end():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Aligns the start of selected tracks with the end of the current selection.
-    """
-    return do("Align_StartToSelEnd")
-
-
-def align__end_to_sel_start():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Aligns the end of selected tracks with the current cursor position or with the start of the current selection.
-    """
-    return do("Align_EndToSelStart")
-
-
-def align__end_to_sel_end():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Aligns the end of selected tracks with the end of the current selection.
-    """
-    return do("Align_EndToSelEnd")
-
-
-def move_selection_with_tracks():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Toggles on/off the selection moving with the realigned tracks, or staying put.
-    """
-    return do("MoveSelectionWithTracks")
-
-
-def sort_by_time():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Sort tracks in order of start time."""
-    return do("SortByTime")
-
-
-def sort_by_name():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Sort tracks in order by name."""
-    return do("SortByName")
-
-
-def manage_generators():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Selecting this option from the Effect Menu (or the Generate Menu or Analyze Menu) takes you to a dialog where you can enable or disable particular Effects, Generators and Analyzers in Audacity. Even if you do not add any third-party plugins, you can use this to make the Effect menu shorter or longer as required. For details see Plugin Manager.
-    """
-    return do("ManageGenerators")
-
-
-def built_in():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Shows the list of available Audacity built-in effects but only if the user has effects "Grouped by Type" in Effects Preferences.
-    """
-    return do("Built-in")
-
-
-def nyquist():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Shows the list of available Nyquist effects but only if the user has effects "Grouped by Type" in Effects Preferences.
-    """
-    return do("Nyquist")
-
 
 class ChirpWaveform(Enum):
     SINE = "Sine"
@@ -1479,142 +113,10 @@ class ChirpInterpolation(Enum):
     LOGARITHMIC = "Logarithmic"
 
 
-def chirp(
-    start_frequency=440,
-    end_frequency=1320,
-    start_amplitude=0.8,
-    end_amplitude=0.1,
-    waveform="Sine",
-    interpolation="Linear",
-):
-    # type: (float, float, float, float, Union[ChirpWaveform, str], Union[ChirpInterpolation, str]) -> str
-    """TODO
-
-    Audacity Documentation: Generates four different types of tone waveforms like the Tone Generator, but additionally allows setting of the starting and ending amplitude and frequency.
-    """
-
-    # Convert enums to strings:
-    if isinstance(waveform, ChirpWaveform):
-        waveform = waveform.value
-    if isinstance(interpolation, ChirpInterpolation):
-        interpolation = interpolation.value
-
-    # Argument type checks:
-    if not isinstance(start_frequency, (float, int)):
-        raise PyAudacityException(
-            "start_frequency argument must be float or int, not " + str(type(start_frequency))
-        )
-    if not isinstance(end_frequency, (float, int)):
-        raise PyAudacityException(
-            "end_frequency argument must be float or int, not " + str(type(end_frequency))
-        )
-    if not isinstance(start_amplitude, (float, int)):
-        raise PyAudacityException(
-            "start_amplitude argument must be float or int, not " + str(type(start_amplitude))
-        )
-    if not isinstance(end_amplitude, (float, int)):
-        raise PyAudacityException(
-            "end_amplitude argument must be float or int, not " + str(type(end_amplitude))
-        )
-
-    # Argument value checks:
-    if waveform.lower() not in ("sine", "square", "sawtooth", "square, no alias"):
-        raise PyAudacityException(
-            'waveform argument must be one of "Sine", "Square", "Sawtooth", or "Square, no alias"'
-        )
-    if interpolation.lower() not in ("linear", "logarithmic"):
-        raise PyAudacityException('interpolation argument must be one of "Linear" or "Logarithmic"')
-
-    if not (0.0 <= start_amplitude <= 1.0):
-        raise PyAudacityException("start_amplitude argument must be between 0.0 and 1.0")
-    if not (0.0 <= end_amplitude <= 1.0):
-        raise PyAudacityException("end_amplitude argument must be between 0.0 and 1.0")
-    if start_frequency < 0:
-        raise PyAudacityException("start_frequency must be positive")
-    if end_frequency < 0:
-        raise PyAudacityException("end_frequency must be positive")
-
-    # Convert str args to their expected case:
-    waveform = waveform[0].upper() + waveform[1:].lower()
-    interpolation = interpolation.title()
-
-    # Run macro:
-    return do(
-        'Chirp: StartFreq="{}" EndFreq="{}" StartAmp="{}" EndAmp="{}" Waveform="{}" Interpolation="{}"'.format(
-            start_frequency,
-            end_frequency,
-            start_amplitude,
-            end_amplitude,
-            waveform,
-            interpolation,
-        )
-    )
-
-
-def dtmf_tones(DTMF_sequence="audacity", duty_cycle=55, amplitude=0.8):
-    # type: (str, float, float) -> str
-    """This macro is broken. The UI specifies Tone/Silence Ratio instead of Duty Cycle,
-    but the macro can't seem to set this. Passing any value for Duty Cycle doesn't have
-    any effect."""
-
-    raise NotImplementedError
-
-    # Old code:
-
-    """TODO
-
-    Audacity Documentation: Generates dual-tone multi-frequency (DTMF) tones like those produced by the keypad on telephones.
-    """
-
-    if not isinstance(DTMF_sequence, str):
-        raise PyAudacityException(
-            "DTMF_sequence argument must be a str, not " + str(type(DTMF_sequence))
-        )
-    if not isinstance(duty_cycle, (float, int)):
-        raise PyAudacityException(
-            "duty_cycle argument must be float or int, not " + str(type(duty_cycle))
-        )
-    if not isinstance(amplitude, (float, int)):
-        raise PyAudacityException(
-            "amplitude argument must be float or int, not " + str(type(amplitude))
-        )
-
-    return do(
-        'DtmfTones: Sequence="{}" DutyCycle="{}" Amplitude="{}"'.format(
-            DTMF_sequence, duty_cycle, amplitude
-        )
-    )
-
-
 class NoiseType(Enum):
     WHITE = "White"
     PINK = "Pink"
     BROWNIAN = "Brownian"
-
-
-def noise(noise_type="White", amplitude=0.8):
-    # type: (Union[NoiseType, str], float) -> str
-    """Fills the selected area with noise.
-
-    Audacity Documentation: Generates 'white', 'pink' or 'brown' noise."""
-
-    # Convert enums to strings:
-    if isinstance(noise_type, NoiseType):
-        noise_type = noise_type.value
-    noise_type = noise_type.title()
-
-    if noise_type not in ("White", "Pink", "Brownian"):
-        raise PyAudacityException('type argument must be one of "White", "Pink" or "Brownian"')
-    if not isinstance(amplitude, (float, int)):
-        raise PyAudacityException(
-            "amplitude argument must be float or int, not " + str(type(amplitude))
-        )
-
-    # Argument value checks:
-    if not (0.0 <= amplitude <= 1.0):
-        raise PyAudacityException("amplitude argument must be between 0.0 and 1.0")
-
-    return do('Noise: Type="{}" Amplitude="{}"'.format(noise_type, amplitude))
 
 
 class ToneWaveform(Enum):
@@ -1625,74 +127,9 @@ class ToneWaveform(Enum):
     TRIANGLE = "Triangle"  # Note: This option doesn't appear in the scripting documentation but does in the UI.
 
 
-def tone(frequency=440, amplitude=0.8, waveform="Sine"):
-    # type: (float, float, Union[ToneWaveform, str]) -> str
-    """TODO
-
-    Audacity Documentation: Generates one of four different tone waveforms: Sine, Square, Sawtooth or Square (no alias), and a frequency between 1 Hz and half the current project rate.
-    """
-
-    # TODO - NOTE: The documentation is wrong; there doesn't seem to be an "Interpolation" parameter anymore for Tone.
-
-    # Convert enums to strings:
-    if isinstance(waveform, ToneWaveform):
-        waveform = waveform.value
-
-    if not isinstance(frequency, (float, int)):
-        raise PyAudacityException(
-            "frequency argument must be float or int, not " + str(type(frequency))
-        )
-    if not isinstance(amplitude, (float, int)):
-        raise PyAudacityException(
-            "amplitude argument must be float or int, not " + str(type(amplitude))
-        )
-    if waveform.lower() not in ("sine", "square", "sawtooth", "square, no alias"):
-        raise PyAudacityException(
-            'waveform argument must be one of "Sine", "Square", "Sawtooth", or "Square, no alias"'
-        )
-
-    waveform = waveform[0].upper() + waveform[1:].lower()
-
-    return do(
-        'Tone: Frequency="{}" Amplitude="{}" Waveform="{}"'.format(frequency, amplitude, waveform)
-    )
-
-
 class PluckFade(Enum):
     ABRUPT = "Abrupt"
     GRADUAL = "Gradual"
-
-
-def pluck(pitch=60, fade="Abrupt", duration=1.0):
-    # type: (int, Union[PluckFade, str], float) -> str
-    """TODO
-
-    Audacity Documentation: A synthesized pluck tone with abrupt or gradual fade-out, and selectable pitch corresponding to a MIDI note.
-    """
-
-    # NOTE: A region of a track must be selected. It's not enough to just set the cursor where you want the pluck to begin. The length of the selected region is, however, ignored.
-
-    # Convert enums to strings:
-    if isinstance(fade, PluckFade):
-        fade = fade.value
-    fade = fade.title()
-
-    if not isinstance(pitch, int):
-        raise PyAudacityException("pitch argument must be int, not " + str(type(pitch)))
-    if not isinstance(duration, (float, int)):
-        raise PyAudacityException(
-            "duration argument must be float or int, not " + str(type(duration))
-        )
-    if fade not in ("Abrupt", "Gradual"):
-        raise PyAudacityException('fade argument must be one of "Abrupt" or "Gradual"')
-
-    # The user interface says 60 seconds is the max duration.
-    if duration > 60:
-        raise PyAudacityException("duration is larger than the 60 seconds maximum allowed limit")
-
-    # Note: The parameter names are lowercase in the documentation so I'm making them lowercase here.
-    # https://manual.audacityteam.org/man/scripting_reference.html
-    return do('Pluck: pitch="{}" fade="{}" dur="{}"'.format(pitch, fade, duration))
 
 
 class RhythmTrackBeatSound(Enum):
@@ -1706,2232 +143,9 @@ class RhythmTrackBeatSound(Enum):
     DRIP_LONG = "Drip (long)"
 
 
-def rhythm_track(
-    tempo=120.0,
-    beats_per_bar=4,
-    swing=0.0,
-    number_of_bars=16,
-    rhythm_track_duration=0,
-    start_time_offset=0,
-    beat_sound="Metronome",
-    pitch_of_strong_beat=84,
-    pitch_of_weak_beat=0,
-):
-    # type: (float, int, float, int, float, float, Union[RhythmTrackBeatSound, str], int, int) -> str
-    """TODO
-
-    Audacity Documentation: Generates a track with regularly spaced sounds at a specified tempo and number of beats per measure (bar).
-    """
-
-    # Convert enums to strings:
-    if isinstance(beat_sound, RhythmTrackBeatSound):
-        beat_sound = beat_sound.value
-
-    if not isinstance(tempo, (float, int)):
-        raise PyAudacityException("tempo argument must be float or int, not " + str(type(tempo)))
-    if not isinstance(beats_per_bar, int):
-        raise PyAudacityException(
-            "beats_per_bar argument must be int, not " + str(type(beats_per_bar))
-        )
-    if not isinstance(swing, (float, int)):
-        raise PyAudacityException("swing argument must be float or int, not " + str(type(swing)))
-    if not isinstance(number_of_bars, int):
-        raise PyAudacityException(
-            "number_of_bars argument must be int, not " + str(type(number_of_bars))
-        )
-    if not isinstance(rhythm_track_duration, (float, int)):
-        raise PyAudacityException(
-            "rhythm_track_duration argument must be float or int, not "
-            + str(type(rhythm_track_duration))
-        )
-    if not isinstance(start_time_offset, (float, int)):
-        raise PyAudacityException(
-            "start_time_offset argument must be float or int, not " + str(type(start_time_offset))
-        )
-    if beat_sound.lower() not in (
-        "metronome tick",
-        "ping (short)",
-        "ping (long)",
-        "cowbell",
-        "resonant noise",
-        "noise click",
-        "drip (short)",
-        "drip (long)",
-    ):
-        raise PyAudacityException('beat_sound argument must be one of "Abrupt" or "Gradual"')
-    if not isinstance(pitch_of_strong_beat, int):
-        raise PyAudacityException(
-            "pitch_of_strong_beat argument must be int, not " + str(type(pitch_of_strong_beat))
-        )
-    if not isinstance(pitch_of_weak_beat, int):
-        raise PyAudacityException(
-            "pitch_of_weak_beat argument must be int, not " + str(type(pitch_of_weak_beat))
-        )
-
-    beat_sound = {
-        "metronome tick": "Metronome",
-        "ping (short)": "Ping (short)",
-        "ping (long)": "Ping (long)",
-        "cowbell": "Cowbell",
-        "resonant noise": "ResonantNoise",
-        "noise click": "NoiseClick",
-        "drip (short)": "Drip (short)",
-        "drip (long)": "Drip (long)",
-    }[beat_sound.lower()]
-
-    # The documentation has the parameters as lowercase, so I do too:
-    return do(
-        'RhythmTrack: tempo="{}" timesig="{}" swing="{}" bars="{}" click-track-dur="{}" offset="{}" click-type="{}" high="{}" low="{}"'.format(
-            tempo,
-            beats_per_bar,
-            swing,
-            number_of_bars,
-            rhythm_track_duration,
-            start_time_offset,
-            beat_sound,
-            pitch_of_strong_beat,
-            pitch_of_weak_beat,
-        )
-    )
-
-
-def risset_drum(
-    frequency=0,
-    decay=0,
-    center_frequency_of_noise=0,
-    width_of_noise_band=0,
-    noise=0,
-    gain=0,
-):
-    # type: (float, float, float, float, float, float) -> str
-    """TODO
-
-    Audacity Documentation: Produces a realistic drum sound."""
-
-    if not isinstance(frequency, (float, int)):
-        raise PyAudacityException(
-            "frequency argument must be float or int, not " + str(type(frequency))
-        )
-    if not isinstance(decay, (float, int)):
-        raise PyAudacityException("decay argument must be float or int, not " + str(type(decay)))
-    if not isinstance(center_frequency_of_noise, (float, int)):
-        raise PyAudacityException(
-            "center_frequency_of_noise argument must be float or int, not "
-            + str(type(center_frequency_of_noise))
-        )
-    if not isinstance(width_of_noise_band, (float, int)):
-        raise PyAudacityException(
-            "width_of_noise_band argument must be float or int, not "
-            + str(type(width_of_noise_band))
-        )
-    if not isinstance(noise, (float, int)):
-        raise PyAudacityException("noise argument must be float or int, not " + str(type(noise)))
-    if not isinstance(gain, (float, int)):
-        raise PyAudacityException("gain argument must be float or int, not " + str(type(gain)))
-
-    # The documentation has lowercase parameters, so I do too:
-    return do(
-        'RissetDrum: freq="{}" decay="{}" cf="{}" bw="{}" noise="{}" gain="{}"'.format(
-            frequency,
-            decay,
-            center_frequency_of_noise,
-            width_of_noise_band,
-            noise,
-            gain,
-        )
-    )
-
-
-def manage_effects():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Selecting this option from the Effect Menu (or the Generate Menu or Analyze Menu) takes you to a dialog where you can enable or disable particular Effects, Generators and Analyzers in Audacity. Even if you do not add any third-party plugins, you can use this to make the Effect menu shorter or longer as required. For details see Plugin Manager.
-    """
-    return do("ManageEffects")
-
-
-def repeat_last_effect():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Repeats the last used effect at its last used settings and without displaying any dialog.
-    """
-    return do("RepeatLastEffect")
-
-
-def ladspa():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Shows the list of available LADSPA effects but only if the user has effects "Grouped by Type" in Effects Preferences.
-    """
-    return do("LADSPA")
-
-
-def amplify(ratio=0.9, allow_clipping=False):
-    # type: (float, bool) -> str
-    """TODO
-
-    Audacity Documentation: Increases or decreases the volume of the audio you have selected.
-    """
-
-    if not isinstance(ratio, (float, int)):
-        raise PyAudacityException("ratio argument must be float or int, not " + str(type(ratio)))
-    if not isinstance(allow_clipping, bool):
-        raise PyAudacityException(
-            "allow_clipping argument must be a bool, not" + str(type(allow_clipping))
-        )
-
-    return do('Amplify: Ratio="{}" AllowClipping="{}"'.format(ratio, allow_clipping))
-
-
-def auto_duck(
-    duck_amount_db=-12,
-    inner_fade_down_len=0,
-    inner_fade_up_len=0,
-    outer_fade_down_len=0.5,
-    outer_fade_up_len=0.5,
-    threshold_db=-30,
-    maximum_pause=1,
-):
-    # type: (float, float, float, float, float, float, float) -> str
-    """TODO
-
-    Audacity Documentation: Reduces (ducks) the volume of one or more tracks whenever the volume of a specified "control" track reaches a particular level. Typically used to make a music track softer whenever speech in a commentary track is heard.
-    """
-
-    if not isinstance(duck_amount_db, (float, int)):
-        raise PyAudacityException(
-            "duck_amount_db argument must be float or int, not " + str(type(duck_amount_db))
-        )
-    if not isinstance(inner_fade_down_len, (float, int)):
-        raise PyAudacityException(
-            "inner_fade_down_len argument must be float or int, not "
-            + str(type(inner_fade_down_len))
-        )
-    if not isinstance(inner_fade_up_len, (float, int)):
-        raise PyAudacityException(
-            "inner_fade_up_len argument must be float or int, not " + str(type(inner_fade_up_len))
-        )
-    if not isinstance(outer_fade_down_len, (float, int)):
-        raise PyAudacityException(
-            "outer_fade_down_len argument must be float or int, not "
-            + str(type(outer_fade_down_len))
-        )
-    if not isinstance(outer_fade_up_len, (float, int)):
-        raise PyAudacityException(
-            "outer_fade_up_len argument must be float or int, not " + str(type(outer_fade_up_len))
-        )
-    if not isinstance(threshold_db, (float, int)):
-        raise PyAudacityException(
-            "threshold_db argument must be float or int, not " + str(type(threshold_db))
-        )
-    if not isinstance(maximum_pause, (float, int)):
-        raise PyAudacityException(
-            "maximum_pause argument must be float or int, not " + str(type(maximum_pause))
-        )
-
-    return do(
-        'AutoDuck: DuckAmountDb="{}" InnerFadeDownLen="{}" InnerFadeUpLen="{}" OuterFadeDownLen="{}" OuterFadeUpLen="{}" ThresholdDb="{}" MaximumPause="{}"'.format(
-            duck_amount_db,
-            inner_fade_down_len,
-            inner_fade_up_len,
-            outer_fade_down_len,
-            outer_fade_up_len,
-            threshold_db,
-            maximum_pause,
-        )
-    )
-
-
-def bass_and_treble(bass=0, treble=0, gain=0, link_sliders=False):
-    # type: (float, float, float, bool) -> str
-    """TODO
-
-    Audacity Documentation: Increases or decreases the lower frequencies and higher frequencies of your audio independently; behaves just like the bass and treble controls on a stereo system.
-    """
-
-    if not isinstance(bass, (float, int)):
-        raise PyAudacityException("bass argument must be float or int, not " + str(type(bass)))
-    if not isinstance(treble, (float, int)):
-        raise PyAudacityException("treble argument must be float or int, not " + str(type(treble)))
-    if not isinstance(gain, (float, int)):
-        raise PyAudacityException("gain argument must be float or int, not " + str(type(gain)))
-    if not isinstance(link_sliders, bool):
-        raise PyAudacityException(
-            "link_sliders argument must be a bool, not" + str(type(link_sliders))
-        )
-
-    # TODO - The documentation shows it as "Link Sliders" but I don't know if the space is intentional or not.
-    # There's no way to tell since Audacity's macro system doesn't give errors for bad parameter names.
-    return do('BassAndTreble: Bass="{}" Treble="{}" Gain="{}" LinkSliders="{}"')
-
-
-def change_pitch(percentage=0.0, use_high_quality_stretching=False):
-    # type: (float, bool) -> str
-    """TODO
-
-    Audacity Documentation: Change the pitch of a selection without changing its tempo.
-    """
-
-    # TODO - the documentation is unclear as to what SBSMS stands for, but it's
-    # a bool and the only checkbox in the Change Pitch dialog is the one marked
-    # "Use high quality stretching (slow)", and SBSMS and this checkbox are
-    # also found in the Change Tempo dialog.
-    # I've decided to rename SBSMS to use_high_quality_stretching
-
-    # TODO - there seem to be several fields in the Change Pitch dialog that
-    # aren't captured by the parameters for this macro. What's up with that?
-
-    if not isinstance(percentage, (float, int)):
-        raise PyAudacityException(
-            "percentage argument must be float or int, not " + str(type(percentage))
-        )
-    if not isinstance(use_high_quality_stretching, bool):
-        raise PyAudacityException(
-            "use_high_quality_stretching argument must be a bool, not"
-            + str(type(use_high_quality_stretching))
-        )
-
-    return do(
-        'ChangePitch: Percentage="{}" SBSMS="{}"'.format(percentage, use_high_quality_stretching)
-    )
-
-
-def change_speed(percentage=0.0):
-    # type: (float) -> str
-    """TODO
-
-    Audacity Documentation: Change the speed of a selection, also changing its pitch."""
-
-    if not isinstance(percentage, (float, int)):
-        raise PyAudacityException(
-            "percentage argument must be float or int, not " + str(type(percentage))
-        )
-
-    return do('ChangeSpeed: Percentage="{}"'.format(percentage))
-
-
-def change_tempo(percentage=0.0, use_high_quality_stretching=False):
-    # type: (float, bool) -> str
-    """TODO
-
-    Audacity Documentation: Change the tempo and length (duration) of a selection without changing its pitch.
-    """
-
-    if not isinstance(percentage, (float, int)):
-        raise PyAudacityException(
-            "percentage argument must be float or int, not " + str(type(percentage))
-        )
-    if not isinstance(use_high_quality_stretching, bool):
-        raise PyAudacityException(
-            "use_high_quality_stretching argument must be a bool, not"
-            + str(type(use_high_quality_stretching))
-        )
-
-    return do(
-        'ChangeTempo: Percentage="{}" SBSMS="{}"'.format(percentage, use_high_quality_stretching)
-    )
-
-
-def click_removal(threshold=200, width=20):
-    # type: (int, int) -> str
-    """TODO
-
-    Audacity Documentation: Click Removal is designed to remove clicks on audio tracks and is especially suited to declicking recordings made from vinyl records.
-    """
-
-    if not isinstance(threshold, int):
-        raise PyAudacityException("threshold argument must be int, not " + str(type(threshold)))
-    if not isinstance(width, int):
-        raise PyAudacityException("width argument must be int, not " + str(type(width)))
-
-    return do('ClickRemoval: Threshold="{}" Width="{}"'.format(threshold, width))
-
-
-def compressor(
-    threshold=-12.0,
-    noise_floor=-40.0,
-    ratio=2.0,
-    attack_time=0.2,
-    release_time=1.0,
-    normalize=True,
-    use_peak=False,
-):
-    # type: (float, float, float, float, float, bool, bool) -> str
-    """TODO
-
-    Audacity Documentation: Compresses the dynamic range by two alternative methods. The default "RMS" method makes the louder parts softer, but leaves the quieter audio alone. The alternative "peaks" method makes the entire audio louder, but amplifies the louder parts less than the quieter parts. Make-up gain can be applied to either method, making the result as loud as possible without clipping, but not changing the dynamic range further.
-    """
-
-    if not isinstance(threshold, (float, int)):
-        raise PyAudacityException(
-            "threshold argument must be float or int, not " + str(type(threshold))
-        )
-    if not isinstance(noise_floor, (float, int)):
-        raise PyAudacityException(
-            "noise_floor argument must be float or int, not " + str(type(noise_floor))
-        )
-    if not isinstance(ratio, (float, int)):
-        raise PyAudacityException("ratio argument must be float or int, not " + str(type(ratio)))
-    if not isinstance(attack_time, (float, int)):
-        raise PyAudacityException(
-            "attack_time argument must be float or int, not " + str(type(attack_time))
-        )
-    if not isinstance(release_time, (float, int)):
-        raise PyAudacityException(
-            "release_time argument must be float or int, not " + str(type(release_time))
-        )
-    if not isinstance(normalize, bool):
-        raise PyAudacityException("normalize argument must be a bool, not" + str(type(normalize)))
-    if not isinstance(use_peak, bool):
-        raise PyAudacityException("use_peak argument must be a bool, not" + str(type(use_peak)))
-
-    return do(
-        'Compressor: Threshold="{}" NoiseFloor="{}" Ratio="{}" AttackTime="{}" ReleaseTime="{}" Normalize="{}" UsePeak="{}"'.format(
-            threshold,
-            noise_floor,
-            ratio,
-            attack_time,
-            release_time,
-            normalize,
-            use_peak,
-        )
-    )
-
-
-def distortion():
-    """TODO
-
-    Audacity Documentation: Use the Distortion effect to make the audio sound distorted. By distorting the waveform the frequency content is changed, which will often make the sound "crunchy" or "abrasive". Technically this effect is a waveshaper. The result of waveshaping is equivalent to applying non-linear amplification to the audio waveform. Preset shaping functions are provided, each of which produces a different type of distortion.
-    """
-    raise NotImplementedError
-
-
-def echo(delay=1.0, decay=0.5):
-    # type: (float, float) -> str
-    """TODO
-
-    Audacity Documentation: Repeats the selected audio again and again, normally softer each time and normally not blended into the original sound until some time after it starts. The delay time between each repeat is fixed, with no pause in between each repeat. For a more configurable echo effect with a variable delay time and pitch-changed echoes, see Delay.
-    """
-
-    if not isinstance(delay, (float, int)):
-        raise PyAudacityException("delay argument must be float or int, not " + str(type(delay)))
-    if not isinstance(decay, (float, int)):
-        raise PyAudacityException("decay argument must be float or int, not " + str(type(decay)))
-
-    return do('Echo: Delay="{}" Decay="{}"'.format(delay, decay))
-
-
-def fade_in():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Applies a linear fade-in to the selected audio - the rapidity of the fade-in depends entirely on the length of the selection it is applied to. For a more customizable logarithmic fade, use the Envelope Tool on the Tools Toolbar.
-    """
-
-    return do("FadeIn")
-
-
-def fade_out():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Applies a linear fade-out to the selected audio - the rapidity of the fade-out depends entirely on the length of the selection it is applied to. For a more customizable logarithmic fade, use the Envelope Tool on the Tools Toolbar.
-    """
-
-    return do("FadeOut")
-
-
-def filter_curve():
-    """TODO
-
-    Audacity Documentation: Adjusts the volume levels of particular frequencies."""
-    raise NotImplementedError
-
-
-def graphic_eq():
-    """TODO
-
-    Audacity Documentation: Adjusts the volume levels of particular frequencies."""
-    raise NotImplementedError
-
-
-def invert():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: This effect flips the audio samples upside-down. This normally does not affect the sound of the audio at all. It is occasionally useful for vocal removal.
-    """
-
-    return do("Invert")
-
-
-def loudness_normalization(
-    stereo_independent=False,
-    LUFS_level=-23.0,
-    RMS_level=-20.0,
-    dual_mono=True,
-    normalize_to=0,
-):
-    # type: (bool, float, float, bool, int) -> str
-    """TODO
-
-    Audacity Documentation: Changes the perceived loudness of the audio."""
-
-    if not isinstance(stereo_independent, bool):
-        raise PyAudacityException(
-            "stereo_independent argument must be a bool, not" + str(type(stereo_independent))
-        )
-    if not isinstance(LUFS_level, (float, int)):
-        raise PyAudacityException(
-            "LUFS_level argument must be float or int, not " + str(type(LUFS_level))
-        )
-    if not isinstance(RMS_level, (float, int)):
-        raise PyAudacityException(
-            "RMS_level argument must be float or int, not " + str(type(RMS_level))
-        )
-    if not isinstance(dual_mono, bool):
-        raise PyAudacityException("dual_mono argument must be a bool, not" + str(type(dual_mono)))
-    if not isinstance(normalize_to, int):
-        raise PyAudacityException(
-            "normalize_to argument must be int, not " + str(type(normalize_to))
-        )
-
-    return do(
-        'LoudnessNormalization: StereoIndependent="{}" LUFSLevel="{}" RMFSLevel="{}" DualMono="{}" NormalizeTo="{}"'.format(
-            stereo_independent, LUFS_level, RMS_level, dual_mono, normalize_to
-        )
-    )
-
-
-# The documentation says this effect is not available for scripting.
-# def noise_reduction():
-#    # type: () -> str
-#    """TODO
-#
-#    Audacity Documentation: This effect is ideal for reducing constant background noise such as fans, tape noise, or hums. It will not work very well for removing talking or music in the background. More details here
-#    This effect is not currently available from scripting."""
-#    return do('NoiseReduction')
-
-
-def normalize(peak_level=-1.0, apply_gain=True, remove_dc_offset=True, stereo_independent=False):
-    # type: (float, bool, bool, bool) -> str
-    """TODO
-
-    Audacity Documentation: Use the Normalize effect to set the maximum amplitude of a track, equalize the amplitudes of the left and right channels of a stereo track and optionally remove any DC offset from the track.
-    """
-
-    if not isinstance(peak_level, (float, int)):
-        raise PyAudacityException(
-            "peak_level argument must be float or int, not " + str(type(peak_level))
-        )
-    if not isinstance(apply_gain, bool):
-        raise PyAudacityException("apply_gain argument must be a bool, not" + str(type(apply_gain)))
-    if not isinstance(remove_dc_offset, bool):
-        raise PyAudacityException(
-            "remove_dc_offset argument must be a bool, not" + str(type(remove_dc_offset))
-        )
-    if not isinstance(stereo_independent, bool):
-        raise PyAudacityException(
-            "stereo_independent argument must be a bool, not" + str(type(stereo_independent))
-        )
-
-    return do(
-        'Normalize: PeakLevel="{}" ApplyGain="{}" RemoveDcOffset="{}" StereoIndependent="{}"'.format(
-            peak_level, apply_gain, remove_dc_offset, stereo_independent
-        )
-    )
-
-
-def paulstretch(stretch_factor=10.0, time_resolution=0.25):
-    # type: (float, float) -> str
-    """TODO
-
-    Audacity Documentation: Use Paulstretch only for an extreme time-stretch or "stasis" effect, This may be useful for synthesizer pad sounds, identifying performance glitches or just creating interesting aural textures. Use Change Tempo or Sliding Time Scale rather than Paulstretch for tasks like slowing down a song to a "practice" tempo.
-    """
-
-    if not isinstance(stretch_factor, (float, int)):
-        raise PyAudacityException(
-            "stretch_factor argument must be float or int, not " + str(type(stretch_factor))
-        )
-    if not isinstance(time_resolution, (float, int)):
-        raise PyAudacityException(
-            "time_resolution argument must be float or int, not " + str(type(time_resolution))
-        )
-
-    # TODO - documentation uses "Time Resolution" with a space. Check this out. I assume that there is no space for now.
-    return do(
-        'Paulstretch: StretchFactor="{}" TimeResolution="{}"'.format(
-            stretch_factor, time_resolution
-        )
-    )
-
-
-def phaser(stages=2, dry_wet=128, frequency=0.4, phase=0.0, depth=100, feedback=0, gain=-6.0):
-    # type: (int, int, float, float, int, int, float) -> str
-    """TODO
-
-    Audacity Documentation: The name "Phaser" comes from "Phase Shifter", because it works by combining phase-shifted signals with the original signal. The movement of the phase-shifted signals is controlled using a Low Frequency Oscillator (LFO).
-    """
-
-    if not isinstance(stages, int):
-        raise PyAudacityException("stages argument must be int, not " + str(type(stages)))
-    if not isinstance(dry_wet, int):
-        raise PyAudacityException("dry_wet argument must be int, not " + str(type(dry_wet)))
-    if not isinstance(frequency, (float, int)):
-        raise PyAudacityException(
-            "frequency argument must be float or int, not " + str(type(frequency))
-        )
-    if not isinstance(phase, (float, int)):
-        raise PyAudacityException("phase argument must be float or int, not " + str(type(phase)))
-    if not isinstance(depth, int):
-        raise PyAudacityException("depth argument must be int, not " + str(type(depth)))
-    if not isinstance(feedback, int):
-        raise PyAudacityException("feedback argument must be int, not " + str(type(feedback)))
-    if not isinstance(gain, (float, int)):
-        raise PyAudacityException("gain argument must be float or int, not " + str(type(gain)))
-
-    return do(
-        'Phaser: Stages="{}" DryWet="{}" Freq="{}" Phase="{}" Depth="{}" Feedback="{}" Gain="{}"'.format(
-            stages, dry_wet, frequency, phase, depth, feedback, gain
-        )
-    )
-
-
-def repair():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Fix one particular short click, pop or other glitch no more than 128 samples long.
-    """
-
-    return do("Repair")
-
-
-def repeat(count=1):
-    # type: (int) -> str
-    """TODO
-
-    Audacity Documentation: Repeats the selection the specified number of times."""
-
-    if not isinstance(count, int):
-        raise PyAudacityException("count argument must be int, not " + str(type(count)))
-
-    return do('Repeat: Count="{}"'.format(count))
-
-
-def reverb(
-    room_size=75.0,
-    delay=10.0,
-    reverberance=50.0,
-    hf_damping=50.0,
-    tone_low=100.0,
-    tone_high=100.0,
-    wet_gain=-1.0,
-    dry_gain=-1.0,
-    stereo_width=100.0,
-    wet_only=False,
-):
-    # type: (float, float, float, float, float, float, float, float, float, bool) -> str
-    """TODO
-
-    Audacity Documentation: A configurable stereo reverberation effect with built-in and user-added presets. It can be used to add ambience (an impression of the space in which a sound occurs) to a mono sound. Also use it to increase reverberation in stereo audio that sounds too "dry" or "close".
-    """
-
-    if not isinstance(room_size, (float, int)):
-        raise PyAudacityException(
-            "room_size argument must be float or int, not " + str(type(room_size))
-        )
-    if not isinstance(delay, (float, int)):
-        raise PyAudacityException("delay argument must be float or int, not " + str(type(delay)))
-    if not isinstance(reverberance, (float, int)):
-        raise PyAudacityException(
-            "reverberance argument must be float or int, not " + str(type(reverberance))
-        )
-    if not isinstance(hf_damping, (float, int)):
-        raise PyAudacityException(
-            "hf_damping argument must be float or int, not " + str(type(hf_damping))
-        )
-    if not isinstance(tone_low, (float, int)):
-        raise PyAudacityException(
-            "tone_low argument must be float or int, not " + str(type(tone_low))
-        )
-    if not isinstance(tone_high, (float, int)):
-        raise PyAudacityException(
-            "tone_high argument must be float or int, not " + str(type(tone_high))
-        )
-    if not isinstance(wet_gain, (float, int)):
-        raise PyAudacityException(
-            "wet_gain argument must be float or int, not " + str(type(wet_gain))
-        )
-    if not isinstance(dry_gain, (float, int)):
-        raise PyAudacityException(
-            "dry_gain argument must be float or int, not " + str(type(dry_gain))
-        )
-    if not isinstance(stereo_width, (float, int)):
-        raise PyAudacityException(
-            "stereo_width argument must be float or int, not " + str(type(stereo_width))
-        )
-    if not isinstance(wet_only, bool):
-        raise PyAudacityException("wet_only argument must be a bool, not" + str(type(wet_only)))
-
-    return do(
-        'Reverb: RoomSize="{}" Delay="{}" Reverberance="{}" HfDamping="{}" ToneLow="{}" ToneHigh="{}" WetGain="{}" DryGain="{}" StereoWidth="{}" WetOnly="{}"'.format(
-            room_size,
-            delay,
-            reverberance,
-            hf_damping,
-            tone_low,
-            tone_high,
-            wet_gain,
-            dry_gain,
-            stereo_width,
-            wet_only,
-        )
-    )
-
-
-def reverse():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Reverses the selected audio; after the effect the end of the audio will be heard first and the beginning last.
-    """
-
-    return do("Reverse")
-
-
-def sliding_stretch(
-    rate_percent_change_start=0.0,
-    rate_percent_change_end=0.0,
-    pitch_half_steps_start=0.0,
-    pitch_half_steps_end=0.0,
-    pitch_percent_change_start=0.0,
-    pitch_percent_change_end=0.0,
-):
-    # type: (float, float, float, float, float, float) -> str
-    """TODO
-
-    Audacity Documentation: This effect allows you to make a continuous change to the tempo and/or pitch of a selection by choosing initial and/or final change values.
-    """
-
-    if not isinstance(rate_percent_change_start, (float, int)):
-        raise PyAudacityException(
-            "rate_percent_change_start argument must be float or int, not "
-            + str(type(rate_percent_change_start))
-        )
-    if not isinstance(rate_percent_change_end, (float, int)):
-        raise PyAudacityException(
-            "rate_percent_change_end argument must be float or int, not "
-            + str(type(rate_percent_change_end))
-        )
-    if not isinstance(pitch_half_steps_start, (float, int)):
-        raise PyAudacityException(
-            "pitch_half_steps_start argument must be float or int, not "
-            + str(type(pitch_half_steps_start))
-        )
-    if not isinstance(pitch_half_steps_end, (float, int)):
-        raise PyAudacityException(
-            "pitch_half_steps_end argument must be float or int, not "
-            + str(type(pitch_half_steps_end))
-        )
-    if not isinstance(pitch_percent_change_start, (float, int)):
-        raise PyAudacityException(
-            "pitch_percent_change_start argument must be float or int, not "
-            + str(type(pitch_percent_change_start))
-        )
-    if not isinstance(pitch_percent_change_end, (float, int)):
-        raise PyAudacityException(
-            "pitch_percent_change_end argument must be float or int, not "
-            + str(type(pitch_percent_change_end))
-        )
-
-    return do(
-        'TODO: RatePercentChangeStart="{}" RatePercentChangeEnd="{}" PitchHalfStepsStart="{}" PitchHalfStepsEnd="{}" PitchPercentChangeStart="{}" PitchPercentChangeEnd="{}"'
-    ).format(
-        rate_percent_change_start,
-        rate_percent_change_end,
-        pitch_half_steps_start,
-        pitch_half_steps_end,
-        pitch_percent_change_start,
-        pitch_percent_change_end,
-    )
-
-
-def truncate_silence(
-    threshold=-20.0,
-    action="Truncate",
-    minimum=0.5,
-    truncate=0.5,
-    compress=50.0,
-    independent=False,
-):
-    # type: (float, str, float, float, float, bool) -> str
-    """TODO
-
-    Audacity Documentation: Automatically try to find and eliminate audible silences. Do not use this with faded audio.
-    """
-
-    if not isinstance(threshold, (float, int)):
-        raise PyAudacityException(
-            "threshold argument must be float or int, not " + str(type(threshold))
-        )
-    # TODO action check
-    if not isinstance(minimum, (float, int)):
-        raise PyAudacityException(
-            "minimum argument must be float or int, not " + str(type(minimum))
-        )
-    if not isinstance(truncate, (float, int)):
-        raise PyAudacityException(
-            "truncate argument must be float or int, not " + str(type(truncate))
-        )
-    if not isinstance(compress, (float, int)):
-        raise PyAudacityException(
-            "compress argument must be float or int, not " + str(type(compress))
-        )
-    if not isinstance(independent, bool):
-        raise PyAudacityException(
-            "independent argument must be a bool, not" + str(type(independent))
-        )
-
-    return do(
-        'TruncateSilence: Threshold="{}" Action="{}" Minimum="{}" Truncate="{}" Compress="{}" Independent="{}"'
-    ).format(threshold, action, minimum, truncate, compress, independent)
-
-
-def wahwah(freq=1.5, phase=0.0, depth=70, resonance=2.5, offset=30, gain=-6.0):
-    # type: (float, float, int, float, int, float) -> str
-    """TODO
-
-    Audacity Documentation: Rapid tone quality variations, like that guitar sound so popular in the 1970's.
-    """
-
-    if not isinstance(freq, (float, int)):
-        raise PyAudacityException("freq argument must be float or int, not " + str(type(freq)))
-    if not isinstance(phase, (float, int)):
-        raise PyAudacityException("phase argument must be float or int, not " + str(type(phase)))
-    if not isinstance(depth, int):
-        raise PyAudacityException("depth argument must be int, not " + str(type(depth)))
-    if not isinstance(resonance, (float, int)):
-        raise PyAudacityException(
-            "resonance argument must be float or int, not " + str(type(resonance))
-        )
-    if not isinstance(offset, int):
-        raise PyAudacityException("offset argument must be int, not " + str(type(offset)))
-    if not isinstance(gain, (float, int)):
-        raise PyAudacityException("gain argument must be float or int, not " + str(type(gain)))
-
-    return do(
-        'Wahwah: Freq="{}" Phase="{}" Depth="{}" Resonance="{}" Offset="{}" Gain="{}"'
-    ).format(freq, phase, depth, resonance, offset, gain)
-
-
-def adjustable_fade(type="Up", curve=0.0, units="Percent", gain0=0, gain1=0, preset="None"):
-    # type: (str, float, str, float, float, str) -> str
-    """TODO
-
-    Audacity Documentation: Enables you to control the shape of the fade (non-linear fading) to be applied by adjusting various parameters; allows partial (that is not from or to zero) fades up or down.
-    """
-
-    # TODO add param checks
-
-    return do(
-        'AdjustableFade: type="{}" curve="{}" units="{}" gain0="{}" gain1="{}" preset="{}"'.format(
-            type, curve, units, gain0, gain1, preset
-        )
-    )
-
-
-def clip_fix(threshold=0.0, gain=0.0):
-    # type: (float, float) -> str
-    """TODO
-
-    Audacity Documentation: Clip Fix attempts to reconstruct clipped regions by interpolating the lost signal.
-    """
-
-    if not isinstance(threshold, (float, int)):
-        raise PyAudacityException(
-            "threshold argument must be float or int, not " + str(type(threshold))
-        )
-    if not isinstance(gain, (float, int)):
-        raise PyAudacityException("gain argument must be float or int, not " + str(type(gain)))
-
-    return do('ClipFix: threshold="{}" gain="{}"'.format(threshold, gain))
-
-
-def crossfade_clips():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Use Crossfade Clips to apply a simple crossfade to a selected pair of clips in a single audio track.
-    """
-
-    return do("CrossfadeClips")
-
-
-def crossfade_tracks(type="ConstantGain", curve=0.0, direction="Automatic"):
-    # type: (str, float, str) -> str
-    """TODO
-
-    Audacity Documentation: Use Crossfade Tracks to make a smooth transition between two overlapping tracks one above the other. Place the track to be faded out above the track to be faded in then select the overlapping region in both tracks and apply the effect.
-    """
-
-    # TODO - add param checks
-    return do('CrossfadeTracks: type="{}" curve="{}" direction="{}"'.format(type, curve, direction))
-
-
-def delay(
-    delay_type="Regular",
-    d_gain=0.0,
-    delay=0.0,
-    pitch_type="PitchTempo",
-    shift=0.0,
-    number=0,
-    constrain="Yes",
-):
-    # type: (str, float, float, str, float, int, str) -> str
-    """TODO
-
-    Audacity Documentation: A configurable delay effect with variable delay time and pitch shifting of the delays.
-    """
-
-    # TODO - add param checks
-
-    return do(
-        'Delay: delay-type="{}" dgain="{}" delay="{}" pitch-type="{}" shift="{}" number="{}" constrain="{}"'.format(
-            delay_type, d_gain, delay, pitch_type, shift, number, constrain
-        )
-    )
-
-
-def high_pass_filter(frequency=0.0, roll_off="dB6"):
-    # type: (float, str) -> str
-    """TODO
-
-    Audacity Documentation: Passes frequencies above its cutoff frequency and attenuates frequencies below its cutoff frequency.
-    """
-
-    return do('High-passFilter: frequency="{}" rolloff="{}"'.format(frequency, roll_off))
-
-
-def limiter(type="SoftLimit", gain_left=0, gain_right=0, limit=0, hold=0, makeup="No"):
-    # type: (str, float, float, float, float, str) -> str
-    """TODO
-
-    Audacity Documentation: Limiter passes signals below a specified input level unaffected or gently reduced, while preventing the peaks of stronger signals from exceeding this threshold. Mastering engineers often use this type of dynamic range compression combined with make-up gain to increase the perceived loudness of an audio recording during the audio mastering process.
-    """
-
-    return do(
-        'Limiter: type="{}" gain-L="{}" gain-R="{}" thresh="{}" hold="{}" makeup="{}"'.format(
-            type, gain_left, gain_right, limit, hold, makeup
-        )
-    )
-
-
-def low_pass_filter(frequency=0.0, roll_off="db6"):
-    # type: (float, str) -> str
-    """TODO
-
-    Audacity Documentation: Passes frequencies below its cutoff frequency and attenuates frequencies above its cutoff frequency.
-    """
-
-    return do('Low-passFilter: frequency="{}" rolloff="{}"'.format(frequency, roll_off))
-
-
-def notch_filter(frequency=0.0, q=0.0):
-    # type: (float, float) -> str
-    """TODO
-
-    Audacity Documentation: Greatly attenuate ("notch out"), a narrow frequency band. This is a good way to remove mains hum or a whistle confined to a specific frequency with minimal damage to the remainder of the audio.
-    """
-
-    if not isinstance(frequency, (float, int)):
-        raise PyAudacityException(
-            "frequency argument must be float or int, not " + str(type(frequency))
-        )
-    if not isinstance(q, (float, int)):
-        raise PyAudacityException("q argument must be float or int, not " + str(type(q)))
-
-    return do('NotchFilter: frequency="{}" q="{}"').format(frequency, q)
-
-
-def spectral_edit_multi_tool():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: When the selected track is in spectrogram or spectrogram log(f) view, applies a notch filter, high pass filter or low pass filter according to the spectral selection made. This effect can also be used to change the audio quality as an alternative to using Equalization.
-    """
-    return do("SpectralEditMultiTool")
-
-
-def spectral_edit_parametric_eq(control_gain=0.0):
-    # type: (float) -> str
-    """TODO
-
-    Audacity Documentation: When the selected track is in spectrogram or spectrogram log(f) view and the spectral selection has a center frequency and an upper and lower boundary, performs the specified band cut or band boost. This can be used as an alternative to Equalization or may also be useful to repair damaged audio by reducing frequency spikes or boosting other frequencies to mask spikes.
-    """
-
-    if not isinstance(control_gain, (float, int)):
-        raise PyAudacityException(
-            "control_gain argument must be float or int, not " + str(type(control_gain))
-        )
-
-    # TODO - double check other macros for parameter names with dashes.
-    return do('SpectralEditParametricEq: control-gain="{}"').format(control_gain)
-
-
-def spectral_edit_shelves(control_gain=0.0):
-    # type: (float) -> str
-    """TODO
-
-    Audacity Documentation: When the selected track is in spectrogram or spectrogram log(f) view, applies either a low- or high-frequency shelving filter or both filters, according to the spectral selection made. This can be used as an alternative to Equalization or may also be useful to repair damaged audio by reducing frequency spikes or boosting other frequencies to mask spikes.
-    """
-
-    if not isinstance(control_gain, (float, int)):
-        raise PyAudacityException(
-            "control_gain argument must be float or int, not " + str(type(control_gain))
-        )
-
-    return do('SpectralEditShelves: control-gain="{}"').format(control_gain)
-
-
-def studio_fade_out():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Applies a more musical fade out to the selected audio, giving a more pleasing sounding result.
-    """
-
-    return do("StudioFadeOut")
-
-
-def tremolo(wave="Sine", phase=0, wet=0, lfo=0.0):
-    # type: (str, int, int, float) -> str
-    """TODO
-
-    Audacity Documentation: Modulates the volume of the selection at the depth and rate selected in the dialog. The same as the tremolo effect familiar to guitar and keyboard players.
-    """
-
-    # TODO check wave argument
-
-    # TODO in the Tremolo dialog, wet's default is 40 and frequency's default is 4.0. Are the docs wrong?
-
-    # TODO in the Tremolo dialog, lfo is labeled "Frequency". What's the correct name?
-
-    if not isinstance(phase, int):
-        raise PyAudacityException("phase argument must be int, not " + str(type(phase)))
-    if not isinstance(wet, int):
-        raise PyAudacityException("wet argument must be int, not " + str(type(wet)))
-    if not isinstance(lfo, (float, int)):
-        raise PyAudacityException("lfo argument must be float or int, not " + str(type(lfo)))
-
-    return do('Tremolo: wave="{}" phase="{}" wet="{}" lfo="{}"').format(wave, phase, wet, lfo)
-
-
-def vocal_reduction_and_isolation(
-    action="RemoveToMono", strength=0.0, low_transition=0.0, high_transition=0.0
-):
-    # type: (str, float, float, float) -> str
-    """TODO
-
-    Audacity Documentation: Attempts to remove or isolate center-panned audio from a stereo track. Most "Remove" options in this effect preserve the stereo image.
-    """
-
-    # TODO check action
-
-    if not isinstance(strength, (float, int)):
-        raise PyAudacityException(
-            "strength argument must be float or int, not " + str(type(strength))
-        )
-    if not isinstance(low_transition, (float, int)):
-        raise PyAudacityException(
-            "low_transition argument must be float or int, not " + str(type(low_transition))
-        )
-    if not isinstance(high_transition, (float, int)):
-        raise PyAudacityException(
-            "high_transition argument must be float or int, not " + str(type(high_transition))
-        )
-
-    return do('TODO: strength="{}" low_transition="{}" high_transition="{}"').format(
-        strength, low_transition, high_transition
-    )
-
-
-def vocoder(
-    dst=0.0,
-    mst="BothChannels",
-    bands=0,
-    track_vl=0.0,
-    noise_vl=0.0,
-    radar_vl=0.0,
-    radar_f=0.0,
-):
-    # type: (float, str, int, float, float, float, float) -> str
-    """TODO
-
-    Audacity Documentation: Synthesizes audio (usually a voice) in the left channel of a stereo track with a carrier wave (typically white noise) in the right channel to produce a modified version of the left channel. Vocoding a normal voice with white noise will produce a robot-like voice for special effects.
-    """
-
-    if not isinstance(dst, (float, int)):
-        raise PyAudacityException("dst argument must be float or int, not " + str(type(dst)))
-    # TODO check mst
-    if not isinstance(bands, int):
-        raise PyAudacityException("bands argument must be int, not " + str(type(bands)))
-    if not isinstance(track_vl, (float, int)):
-        raise PyAudacityException(
-            "track_vl argument must be float or int, not " + str(type(track_vl))
-        )
-    if not isinstance(noise_vl, (float, int)):
-        raise PyAudacityException(
-            "noise_vl argument must be float or int, not " + str(type(noise_vl))
-        )
-    if not isinstance(radar_vl, (float, int)):
-        raise PyAudacityException(
-            "radar_vl argument must be float or int, not " + str(type(radar_vl))
-        )
-    if not isinstance(radar_f, (float, int)):
-        raise PyAudacityException(
-            "radar_f argument must be float or int, not " + str(type(radar_f))
-        )
-
-    return do(
-        'TODO: dst="{}" mst="{}" bands="{}" track-vl="{}" noise-vl="{}" radar-vl="{}" radar-f="{}"'
-    ).format(dst, mst, bands, track_vl, noise_vl, radar_vl, radar_f)
-
-
-# NOTE THE SPELLING OF "ANALYZERS"
-def manage_analyzers():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Selecting this option from the Effect Menu (or the Generate Menu or Analyze Menu) takes you to a dialog where you can enable or disable particular Effects, Generators and Analyzers in Audacity. Even if you do not add any third-party plugins, you can use this to make the Effect menu shorter or longer as required. For details see Plugin Manager.
-    """
-    return do("ManageAnalyzers")
-
-
-# NOTE THE SPELLING OF "ANALYSER"
-def contrast_analyser():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Analyzes a single mono or stereo speech track to determine the average RMS difference in volume (contrast) between foreground speech and background music, audience noise or similar. The purpose is to determine if the speech will be intelligible to the hard of hearing.
-    """
-    return do("ConrastAnalyser")
-
-
-def plot_spectrum():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Takes the selected audio (which is a set of sound pressure values at points in time) and converts it to a graph of frequencies against amplitudes.
-    """
-    return do("PlotSpectrum")
-
-
-def find_clipping(duty_cycle_start=3, duty_cycle_end=3):
-    # type: (int, int) -> str
-    """TODO
-
-    Audacity Documentation: Displays runs of clipped samples in a Label Track, as a screen-reader accessible alternative to View > Show Clipping. A run must include at least one clipped sample, but may include unclipped samples too.
-    """
-
-    # TODO Parameter names in documentation have spaces, double check
-
-    if not isinstance(duty_cycle_start, int):
-        raise PyAudacityException(
-            "duty_cycle_start argument must be int, not " + str(type(duty_cycle_start))
-        )
-    if not isinstance(duty_cycle_end, int):
-        raise PyAudacityException(
-            "duty_cycle_end argument must be int, not " + str(type(duty_cycle_end))
-        )
-
-    return do('FindClipping: DutyCycleStart="{}" DutyCycleEnd="{}"').format(
-        duty_cycle_start, duty_cycle_end
-    )
-
-
-def beat_finder(thresval=0):
-    # type: (int) -> str
-    """TODO
-
-    Audacity Documentation: Attempts to place labels at beats which are much louder than the surrounding audio. It's a fairly rough and ready tool, and will not necessarily work well on a typical modern pop music track with compressed dynamic range. If you do not get enough beats detected, try reducing the "Threshold Percentage" setting.
-    """
-
-    if not isinstance(thresval, int):
-        raise PyAudacityException("thresval argument must be int, not " + str(type(thresval)))
-
-    return do('BeatFinder: thresval="{}"').format(thresval)
-
-
-def label_sounds(
-    thershold_level=-30,
-    threshold_measurement="Peak level",
-    min_silence_duration=0,
-    min_label_interval=0,
-    label_type="Point before sound",
-    max_leading_silence=0,
-    max_trailing_silence=0,
-    label_text="Sound ##1",
-):
-    # type: (float, str, float, float, str, float, float, str) -> str
-    """TODO
-
-    Audacity Documentation: Divides up a track by placing labels for areas of sound that are separated by silence.
-    """
-
-    return do(
-        'LabelSounds: threshold="{}" measurement="{}" sil-dur="{}" snd-dur="{}" type="{}" pre-offset="{}" post-offset="{}" text="{}"'.format(
-            thershold_level,
-            threshold_measurement,
-            min_silence_duration,
-            min_label_interval,
-            label_type,
-            max_leading_silence,
-            max_trailing_silence,
-            label_text,
-        )
-    )
-
-
-def manage_tools():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Selecting this option from the Effect Menu (or the Generate Menu or Analyze Menu) takes you to a dialog where you can enable or disable particular Effects, Generators and Analyzers in Audacity. Even if you do not add any third-party plugins, you can use this to make the Effect menu shorter or longer as required. For details see Plugin Manager.
-    """
-
-    return do("ManageTools")
-
-
-def manage_macros():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Creates a new macro or edits an existing macro."""
-
-    return do("ManageMacros")
-
-
-def apply_macro():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Displays a menu with list of all your Macros. Selecting any of these Macros by clicking on it will cause that Macro to be applied to the current project.
-    """
-
-    # TODO - documentation shows "Apply Macro" as the name, with a space. I assume this is wrong and remove the space:
-    return do("ApplyMacro")
-
-
-def screenshot(
-    save_images_to_folder=Path.home(),
-    capture="Window Only",
-    background="None",
-    to_top=True,
-):
-    """TODO
-
-    Audacity Documentation: A tool, mainly used in documentation, to capture screenshots of Audacity.
-    """
-
-    # TODO - find out what "ToTop" parameter is for. The docs don't say and it doesn't appear in the UI.
-    raise NotImplementedError
-
-
-def benchmark():
-    """Opens the Tools > Run Benchmark dialog.
-
-    Audacity Documentation: A tool for measuring the performance of one part of Audacity.
-    """
-
-    return do("Benchmark")
-
-
-def nyquist_prompt(command="", version=3):
-    # type: (str, int) -> str
-    """TODO
-
-    Audacity Documentation: Brings up a dialog where you can enter Nyquist commands. Nyquist is a programming language for generating, processing and analyzing audio. For more information see Nyquist Plugins Reference.
-    """
-
-    if not isinstance(command, str):
-        raise PyAudacityException("command argument must be str, not " + str(type(command)))
-    if not isinstance(version, int):
-        raise PyAudacityException("version argument must be int, not " + str(type(version)))
-
-    return do('NyquistPrompt: Command="{}" Version="{}"').format(command, version)
-
-
-def nyquist_plugin_installer(files="", overwrite="Disallow"):
-    """TODO
-
-    Audacity Documentation: A Nyquist plugin that simplifies the installation of other Nyquist plugins.
-    """
-    raise NotImplementedError
-
-
-def regular_interval_labels(
-    mode="Both",
-    total_num=0,
-    interval=0.0,
-    region=0.0,
-    adjust="No",
-    label_text="",
-    zeros="TextOnly",
-    first_number=0,
-    verbose="Details",
-):
-    # type: (str, int, float, float, str, str, str, int, str) -> str
-    """TODO
-
-    Audacity Documentation: Places labels in a long track so as to divide it into smaller, equally sized segments.
-    """
-
-    # TODO check mode, adjust, label_text, zeros, verbose
-    if not isinstance(total_num, int):
-        raise PyAudacityException("total_num argument must be int, not " + str(type(total_num)))
-    if not isinstance(interval, (float, int)):
-        raise PyAudacityException(
-            "interval argument must be float or int, not " + str(type(interval))
-        )
-    if not isinstance(region, (float, int)):
-        raise PyAudacityException("region argument must be float or int, not " + str(type(region)))
-    if not isinstance(first_number, int):
-        raise PyAudacityException(
-            "first_number argument must be int, not " + str(type(first_number))
-        )
-
-    return do(
-        'RegularIntervalLabels: mode="{}" totalnum="{}" interval="{}" region="{}" adjust="{}" labeltext="{}" zeros="{}" firstnum="{}" verbose="{}"'
-    ).format(
-        mode,
-        total_num,
-        interval,
-        region,
-        adjust,
-        label_text,
-        zeros,
-        first_number,
-        verbose,
-    )
-
-
-def sample_data_export(
-    export_filename,
-    limit_output_to_first=100,
-    measurement_scale="dB",
-    index_format="None",
-    include_header_information="None",
-    optional_header_text="",
-    channel_layout_for_stereo="L-R on Same Line",
-    show_messages="Yes",
-):
-    # type: (Union[Path, str], int, str, str, str, str, str, str) -> str
-    """TODO
-
-    Audacity Documentation: Reads the values of successive samples from the selected audio and prints this data to a plain text, CSV or HTML file.
-    """
-
-    # TODO - check params
-
-    return do(
-        'SampleDataExport: number="{}" units="{}" filename="{}" fileformat="{}" header="{}" optext="{}" channel-layout="{}" messages="{}"'.format(
-            limit_output_to_first,
-            measurement_scale,
-            export_filename,
-            index_format,
-            include_header_information,
-            optional_header_text,
-            channel_layout_for_stereo,
-            show_messages,
-        )
-    )
-
-
-def sample_data_import(import_filename, invalid_data_handling="Throw Error"):
-    # type: (Union[Path, str], str) -> str
-    """TODO
-
-    Audacity Documentation: Reads numeric values from a plain ASCII text file and creates a PCM sample for each numeric value read.
-    """
-    raise NotImplementedError
-
-
-def apply_macros_palette():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Displays a menu with list of all your Macros which can be applied to the current project or to audio files.
-    """
-    return do("ApplyMacrosPalette")
-
-
-def macro_fade_ends():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Fades in the first second and fades out the last second of a track.
-    """
-    return do("Macro_FadeEnds")
-
-
-def macro_mp3_conversion():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Converts MP3."""
-    return do("Macro_MP3Conversion")
-
-
-def full_screen_on_off():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Toggle full screen mode with no title bar."""
-    return do("FullScreenOnOff")
-
-
-def play():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Play (or stop) audio."""
-    return do("Play")
-
-
-def stop():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Stop audio."""
-    return do("Stop")
-
-
-def play_one_sec():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Plays for one second centered on the current mouse pointer position (not from the current cursor position). See this page for an example.
-    """
-    return do("PlayOneSec")
-
-
-def play_to_selection():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Plays to or from the current mouse pointer position to or from the start or end of the selection, depending on the pointer position. See this page for more details.
-    """
-    return do("PlayToSelection")
-
-
-def play_before_selection_start():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Plays a short period before the start of the selected audio, the period before shares the setting of the cut preview.
-    """
-    return do("PlayBeforeSelectionStart")
-
-
-def play_after_selection_start():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Plays a short period after the start of the selected audio, the period after shares the setting of the cut preview.
-    """
-    return do("PlayAfterSelectionStart")
-
-
-def play_before_selection_end():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Plays a short period before the end of the selected audio, the period before shares the setting of the cut preview.
-    """
-    return do("PlayBeforeSelectionEnd")
-
-
-def play_after_selection_end():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Plays a short period after the end of the selected audio, the period after shares the setting of the cut preview.
-    """
-    return do("PlayAfterSelectionEnd")
-
-
-def play_before_and_after_selection_start():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Plays a short period before and after the start of the selected audio, the periods before and after share the setting of the cut preview.
-    """
-    return do("PlayBeforeAndAfterSelectionStart")
-
-
-def play_before_and_after_selection_end():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Plays a short period before and after the end of the selected audio, the periods before and after share the setting of the cut preview.
-    """
-    return do("PlayBeforeAndAfterSelectionEnd")
-
-
-def play_cut_preview():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Plays audio excluding the selection."""
-    return do("PlayCutPreview")
-
-
-def select_tool():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Chooses Selection tool."""
-    return do("SelectTool")
-
-
-def envelope_tool():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Chooses Envelope tool."""
-    return do("EnvelopeTool")
-
-
-def draw_tool():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Chooses Draw tool."""
-    return do("DrawTool")
-
-
-def zoom_tool():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Chooses Zoom tool."""
-    return do("ZoomTool")
-
-
-def multi_tool():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Chooses the Multi-Tool."""
-    return do("MultiTool")
-
-
-def prev_tool():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Cycles backwards through the tools, starting from the currently selected tool:  # type: () -> str starting from Selection, it would navigate to Multi-tool to Time Shift to Zoom to Draw to Envelope to Selection.
-    """
-    return do("PrevTool")
-
-
-def next_tool():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Cycles forwards through the tools, starting from the currently selected tool:  # type: () -> str starting from Selection, it would navigate to Envelope to Draw to Zoom to Time Shift to Multi-tool to Selection.
-    """
-    return do("NextTool")
-
-
-def output_gain():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Displays the Playback Volume dialog. You can type a new value for the playback volume (between 0 and 1), or press Tab, then use the left and right arrow keys to adjust the slider.
-    """
-    return do("OutputGain")
-
-
-def output_gain_inc():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Each key press will increase the playback volume by 0.1."""
-    return do("OutputGainInc")
-
-
-def output_gain_dec():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Each key press will decrease the playback volume by 0.1."""
-    return do("OutputGainDec")
-
-
-def input_gain():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Displays the Recording Volume dialog. You can type a new value for the recording volume (between 0 and 1), or press Tab, then use the left and right arrow keys to adjust the slider.
-    """
-    return do("InputGain")
-
-
-def input_gain_inc():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Each key press will increase the recording volume by 0.1."""
-    return do("InputGainInc")
-
-
-def input_gain_dec():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Each key press will decrease the recording volume by 0.1."""
-    return do("InputGainDec")
-
-
-def delete_key():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Deletes the selection. When focus is in Selection Toolbar, BACKSPACE is not a shortcut but navigates back to the previous digit and sets it to zero.
-    """
-    return do("DeleteKey")
-
-
-def delete_key2():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Deletes the selection."""
-    return do("DeleteKey2")
-
-
-def play_at_speed():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Play audio at a faster or slower speed."""
-    return do("PlayAtSpeed")
-
-
-def play_at_speed_looped():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Combines looped play and play at speed."""
-    return do("PlayAtSpeedLooped")
-
-
-def play_at_speed_cut_preview():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Combines cut preview and play at speed."""
-    return do("PlayAtSpeedCutPreview")
-
-
-def set_play_speed():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Displays the Playback Speed dialog. You can type a new value for the playback volume (between 0 and 1), or press Tab, then use the left and right arrow keys to adjust the slider.
-    """
-    return do("SetPlaySpeed")
-
-
-def play_speed_inc():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Each key press will increase the playback speed by 0.1."""
-    return do("PlaySpeedInc")
-
-
-def play_speed_dec():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Each key press will decrease the playback speed by 0.1."""
-    return do("PlaySpeedDec")
-
-
-def move_to_prev_label():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Moves selection to the previous label."""
-    return do("MoveToPrevLabel")
-
-
-def move_to_next_label():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Moves selection to the next label."""
-    return do("MoveToNextLabel")
-
-
-def seek_left_short():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Skips the playback cursor back one second by default."""
-    return do("SeekLeftShort")
-
-
-def seek_right_short():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Skips the playback cursor forward one second by default."""
-    return do("SeekRightShort")
-
-
-def seek_left_long():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Skips the playback cursor back 15 seconds by default."""
-    return do("SeekLeftLong")
-
-
-def seek_right_long():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Skips the playback cursor forward 15 seconds by default."""
-    return do("SeekRightLong")
-
-
-def input_device():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Displays the Select recording Device dialog for choosing the recording device, but only if the "Recording Device" dropdown menu in Device Toolbar has entries for devices. Otherwise, an recording error message will be displayed.
-    """
-    return do("InputDevice")
-
-
-def output_device():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Displays the Select Playback Device dialog for choosing the playback device, but only if the "Playback Device" dropdown menu in Device Toolbar has entries for devices. Otherwise, an error message will be displayed.
-    """
-    return do("OutputDevice")
-
-
-def audio_host():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Displays the Select Audio Host dialog for choosing the particular interface with which Audacity communicates with your chosen playback and recording devices.
-    """
-    return do("AudioHost")
-
-
-def input_channels():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Displays the Select Recording Channels dialog for choosing the number of channels to be recorded by the chosen recording device.
-    """
-    return do("InputChannels")
-
-
-def snap_to_off():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Equivalent to setting the Snap To control in Selection Toolbar to "Off".
-    """
-    return do("SnapToOff")
-
-
-def snap_to_nearest():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Equivalent to setting the Snap To control in Selection Toolbar to "Nearest".
-    """
-    return do("SnapToNearest")
-
-
-def snap_to_prior():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Equivalent to setting the Snap To control in Selection Toolbar to "Prior".
-    """
-    return do("SnapToPrior")
-
-
-def sel_start():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Select from cursor to start of track."""
-    return do("SelStart")
-
-
-def sel_end():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Select from cursor to end of track."""
-    return do("SelEnd")
-
-
-def sel_ext_left():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Increases the size of the selection by extending it to the left. The amount of increase is dependent on the zoom level. If there is no selection one is created starting at the cursor position.
-    """
-    return do("SelExtLeft")
-
-
-def sel_ext_right():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Increases the size of the selection by extending it to the right. The amount of increase is dependent on the zoom level. If there is no selection one is created starting at the cursor position.
-    """
-    return do("SelExtRight")
-
-
-def sel_set_ext_left():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Extend selection left a little (is this a duplicate?)."""
-    return do("SelSetExtLeft")
-
-
-def sel_set_ext_right():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Extend selection right a litlle (is this a duplicate?)."""
-    return do("SelSetExtRight")
-
-
-def sel_cntr_left():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Decreases the size of the selection by contracting it from the right. The amount of decrease is dependent on the zoom level. If there is no selection no action is taken.
-    """
-    return do("SelCntrLeft")
-
-
-def sel_cntr_right():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Decreases the size of the selection by contracting it from the left. The amount of decrease is dependent on the zoom level. If there is no selection no action is taken.
-    """
-    return do("SelCntrRight")
-
-
-def prev_frame():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Move backward through currently focused toolbar in Upper Toolbar dock area, Track View and currently focused toolbar in Lower Toolbar dock area. Each use moves the keyboard focus as indicated.
-    """
-    return do("PrevFrame")
-
-
-def next_frame():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Move forward through currently focused toolbar in Upper Toolbar dock area, Track View and currently focused toolbar in Lower Toolbar dock area. Each use moves the keyboard focus as indicated.
-    """
-    return do("NextFrame")
-
-
-def prev_track():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Focus one track up."""
-    return do("PrevTrack")
-
-
-def next_track():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Focus one track down."""
-    return do("NextTrack")
-
-
-def first_track():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Focus on first track."""
-    return do("FirstTrack")
-
-
-def last_track():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Focus on last track."""
-    return do("LastTrack")
-
-
-def shift_up():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Focus one track up and select it."""
-    return do("ShiftUp")
-
-
-def shift_down():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Focus one track down and select it."""
-    return do("ShiftDown")
-
-
-def toggle():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Toggle focus on current track."""
-    return do("Toggle")
-
-
-def toggle_alt():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Toggle focus on current track."""
-    return do("ToggleAlt")
-
-
-def cursor_left():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: When not playing audio, moves the editing cursor one screen pixel to left. When a Snap To option is chosen, moves the cursor to the preceding unit of time as determined by the current selection format. If the key is held down, the cursor speed depends on the length of the tracks. When playing audio, moves the playback cursor as described at "Cursor Short Jump Left".
-    """
-    return do("CursorLeft")
-
-
-def cursor_right():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: When not playing audio, moves the editing cursor one screen pixel to right. When a Snap To option is chosen, moves the cursor to the following unit of time as determined by the current selection format. If the key is held down, the cursor speed depends on the length of the tracks. When playing audio, moves the playback cursor as described at "Cursor Short Jump Right".
-    """
-    return do("CursorRight")
-
-
-def cursor_short_jump_left():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: When not playing audio, moves the editing cursor one second left by default. When playing audio, moves the playback cursor one second left by default. The default value can be changed by adjusting the "Short Period" under "Seek Time when playing" in Playback Preferences.
-    """
-    return do("CursorShortJumpLeft")
-
-
-def cursor_short_jump_right():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: When not playing audio, moves the editing cursor one second right by default. When playing audio, moves the playback cursor one second right by default. The default value can be changed by adjusting the "Short Period" under "Seek Time when playing" in Playback Preferences.
-    """
-    return do("CursorShortJumpRight")
-
-
-def cursor_long_jump_left():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: When not playing audio, moves the editing cursor 15 seconds left by default. When playing audio, moves the playback cursor 15 seconds left by default. The default value can be changed by adjusting the "Long Period" under "Seek Time when playing" in Playback Preferences.
-    """
-    return do("CursorLongJumpLeft")
-
-
-def cursor_long_jump_right():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: When not playing audio, moves the editing cursor 15 seconds right by default. When playing audio, moves the playback cursor 15 seconds right by default. The default value can be changed by adjusting the "Long Period" under "Seek Time when playing" in Playback Preferences.
-    """
-    return do("CursorLongJumpRight")
-
-
-def clip_left():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Moves the currently focused audio track (or a separate clip in that track which contains the editing cursor or selection region) one screen pixel to left.
-    """
-    return do("ClipLeft")
-
-
-def clip_right():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Moves the currently focused audio track (or a separate clip in that track which contains the editing cursor or selection region) one screen pixel to right.
-    """
-    return do("ClipRight")
-
-
-def track_pan():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Brings up the Pan dialog for the focused track where you can enter a pan value, or use the slider for finer control of panning than is available when using the track pan slider.
-    """
-    return do("TrackPan")
-
-
-def track_pan_left():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Controls the pan slider on the focused track. Each keypress changes the pan value by 10% left.
-    """
-    return do("TrackPanLeft")
-
-
-def track_pan_right():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Controls the pan slider on the focused track. Each keypress changes the pan value by 10% right.
-    """
-    return do("TrackPanRight")
-
-
-def track_gain():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Brings up the Gain dialog for the focused track where you can enter a gain value, or use the slider for finer control of gain than is available when using the track pan slider.
-    """
-    return do("TrackGain")
-
-
-def track_gain_inc():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Controls the gain slider on the focused track. Each keypress increases the gain value by 1 dB.
-    """
-    return do("TrackGainInc")
-
-
-def track_gain_dec():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Controls the gain slider on the focused track. Each keypress decreases the gain value by 1 dB.
-    """
-    return do("TrackGainDec")
-
-
-def track_menu():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Opens the Audio Track Dropdown Menu on the focused audio track or other track type. In the audio track dropdown, use Up, and Down, arrow keys to navigate the menu and Enter, to select a menu item. Use Right, arrow to open the "Set Sample Format" and "Set Rate" choices or Left, arrow to leave those choices.
-    """
-    return do("TrackMenu")
-
-
-def track_mute():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Toggles the Mute button on the focused track."""
-    return do("TrackMute")
-
-
-def track_solo():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Toggles the Solo button on the focused track."""
-    return do("TrackSolo")
-
-
-def track_close():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Close (remove) the focused track only."""
-    return do("TrackClose")
-
-
-def track_move_up():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Moves the focused track up by one track and moves the focus there.
-    """
-    return do("TrackMoveUp")
-
-
-def track_move_down():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Moves the focused track down by one track and moves the focus there.
-    """
-    return do("TrackMoveDown")
-
-
-def track_move_top():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Moves the focused track up to the top of the track table and moves the focus there.
-    """
-    return do("TrackMoveTop")
-
-
-def track_move_bottom():
-    # type: () -> str
-    """TODO
-
-    Audacity Documentation: Moves the focused track down to the bottom of the track table and moves the focus there.
-    """
-    return do("TrackMoveBottom")
-
-
-def select_time(start=None, end=None, relative_to=None):
-    # type: (Optional[float], Optional[float], Optional[str]) -> str
-    """TODO
-
-    Audacity Documentation: Modifies the temporal selection. Start and End are time. FromEnd allows selection from the end, which is handy to fade in and fade out a track.
-    """
-
-    if not isinstance(start, (type(None), float, int)):
-        raise PyAudacityException("start argument must be float or int, not " + str(type(start)))
-    if not isinstance(end, (type(None), float, int)):
-        raise PyAudacityException("end argument must be float or int, not " + str(type(end)))
-    if not isinstance(relative_to, (type(None), str)):
-        raise PyAudacityException("relative_to argument must be str, not " + str(type(relative_to)))
-
-    # TODO check relative_to argument
-
-    # Only include arguments if they are not None. (If they are none, then the selection is "unchanged" according to the documentation.)
-    macro_arguments = []
-    if start is not None:
-        macro_arguments.append('Start="{}"'.format(start))
-    if end is not None:
-        macro_arguments.append('End="{}"'.format(end))
-    if relative_to is not None:
-        macro_arguments.append('RelativeTo="{}"'.format(relative_to))
-
-    return do("SelectTime: " + " ".join(macro_arguments))
-
-
-def select_frequencies(high=None, low=None):
-    # type: (Optional[float], Optional[float]) -> str
-    """TODO
-
-    Audacity Documentation: Modifies what frequencies are selected. High and Low are for spectral selection.
-    """
-
-    if not isinstance(high, (type(None), float, int)):
-        raise PyAudacityException("high argument must be float or int, not " + str(type(high)))
-    if not isinstance(low, (type(None), float, int)):
-        raise PyAudacityException("low argument must be float or int, not " + str(type(low)))
-
-    # Only include arguments if they are not None. (If they are none, then the selection is "unchanged" according to the documentation.)
-    macro_arguments = []
-    if high is not None:
-        macro_arguments.append('High="{}"'.format(high))
-    if low is not None:
-        macro_arguments.append('Low="{}"'.format(low))
-
-    return do("SelectFrequencies: " + " ".join(macro_arguments))
-
-
-def select_tracks():
-    """TODO
-
-    Audacity Documentation: Modifies which tracks are selected. First and Last are track numbers. High and Low are for spectral selection. The Mode parameter allows complex selections, e.g adding or removing tracks from the current selection.
-    """
-    raise NotImplementedError
-
-
-def set_track_status():
-    """TODO
-
-    Audacity Documentation: Sets properties for a track or channel (or both).Name is used to set the name. It is not used in choosing the track.
-    """
-    raise NotImplementedError
-
-
-def set_track_audio():
-    """TODO
-
-    Audacity Documentation: Sets properties for a track or channel (or both). Can set pan, gain, mute and solo.
-    """
-    raise NotImplementedError
-
-
-def set_track_visuals():
-    """TODO
-
-    Audacity Documentation: Sets visual properties for a track or channel (or both). SpectralPrefs=1 sets the track to use general preferences, SpectralPrefs=1 per track prefs. When using general preferences, SetPreferences can be used to change a preference and so affect display of the track.
-    """
-    raise NotImplementedError
-
-
-def get_preference():
-    """TODO
-
-    Audacity Documentation: Gets a single preference setting."""
-    raise NotImplementedError
-
-
-def set_preference():
-    """TODO
-
-    Audacity Documentation: Sets a single preference setting. Some settings such as them changes require a reload (use Reload=1), but this takes time and slows down a script.
-    """
-    raise NotImplementedError
-
-
-def set_clip():
-    """TODO
-
-    Audacity Documentation: Modify a clip by stating the track or channel a time within it. Color and start position can be set. Try to avoid overlapping clips, as Audacity will allow it, but does not like them.
-    """
-    raise NotImplementedError
-
-
 @register_command
 class SetEnvelope(Command):
-    """
-    Audacity Documentation: Modify an envelope by specifying a track or channel and a time within it. You cannot yet delete individual envelope points, but can delete the whole envelope using Delete=1.
-    """
-
-    pass
+    """Modify an envelope by specifying a track or channel and a time within it. You cannot yet delete individual envelope points, but can delete the whole envelope using Delete=1."""
 
 
 @register_command
@@ -3948,203 +162,2400 @@ class SetLabel(Command):
     Selected: Bool | None = None
 
 
-def set_project():
-    """TODO
+@register_command
+class SaveProject(Command):
+    """Various ways to save a project."""
 
-    Audacity Documentation: Sets the project window to a particular location and size. Can also change the caption - but that is cosmetic and may be overwritten again later by Audacity.
-    """
-    raise NotImplementedError
 
+@register_command
+class ExportAudio(Command):
+    """Export audio files in various formats."""
 
-def select():
-    """TODO
 
-    Audacity Documentation: Selects audio. Start and End are time. First and Last are track numbers. High and Low are for spectral selection. FromEnd allows selection from the end, which is handy to fade in and fade out a track. The Mode parameter allows complex selections, e.g adding or removing tracks from the current selection.
-    """
-    raise NotImplementedError
+@register_command
+class PageSetup(Command):
+    """Opens the standard Page Setup dialog box prior to printing"""
 
 
-def set_track():
-    """TODO
+@register_command
+class Print(Command):
+    """Prints all the waveforms in the current project window (and the contents of Label Tracks or other tracks), with the Timeline above. Everything is printed to one page."""
 
-    Audacity Documentation: Selects audio. Start and End are time. First and Last are track numbers. High and Low are for spectral selection. FromEnd allows selection from the end, which is handy to fade in and fade out a track. The Mode parameter allows complex selections, e.g adding or removing tracks from the current selection.
-    """
-    raise NotImplementedError
 
+@register_command
+class Exit(Command):
+    """Closes all project windows and exits Audacity. If there are any unsaved changes to your project, Audacity will ask if you want to save them."""
 
-def get_info(type="Commands", format="JSON"):
-    # type: (str, str) -> str
-    """TODO
 
-    Audacity Documentation: Gets information in a list in one of three formats."""
+@register_command
+class Save(Command):
+    """Saves the current Audacity project .AUP3 file."""
 
-    if type.title() not in (
-        "Commands",
-        "Menus",
-        "Preferences",
-        "Tracks",
-        "Clips",
-        "Envelopes",
-        "Labels",
-        "Boxes",
-    ):
-        raise PyAudacityException(
-            'type argument must be one of "Commands", "Menus", "Preferences", "Tracks", "Clips", "Envelopes", "Labels", or "Boxes"'
-        )
-    if format.title() not in ("JSON", "LISP", "Brief"):
-        raise PyAudacityException('format argument must be one of "JSON", "LISP", or "Brief"')
 
-    return do('GetInfo: Type="{}" Format="{}"'.format(type, format))
+@register_command
+class SaveAs(Command):
+    """Same as "Save Project" above, but allows you to save a copy of an open project to a different name or location"""
 
 
-def message(text="Some message"):
-    # type: (str) -> str
-    """TODO
+@register_command
+class SaveCopy(Command):
+    """Saves the current Audacity project .AUP3 file."""
 
-    Audacity Documentation: Used in testing. Sends the Text string back to you."""
 
-    if not isinstance(text, str):
-        raise PyAudacityException("message argument must be str, not " + str(type(text)))
+@register_command
+class SaveCompressed(Command):
+    """Saves in the audacity .aup3 project file format, but compressed (Suitable for mailing)"""
 
-    return do('Message: Text="{}"'.format(text))
 
+@register_command
+class ExportLabels(Command):
+    """Exports audio at one or more labels to file(s)."""
 
-def help():
-    """TODO
 
-    Audacity Documentation: This is an extract from GetInfo Commands, with just one command.
-    """
-    raise NotImplementedError
+@register_command
+class ExportMIDI(Command):
+    """Exports MIDI (note tracks) to a MIDI file."""
 
 
-# The Import2 macro is used in import().
-# def import2():
-#    """Audacity Documentation: Imports from a file. The automation command uses a text box to get the file name rather than a normal file-open dialog."""
-#    pass # TODO
+@register_command
+class ImportAudio(Command):
+    """Similar to 'Open', except that the file is added as a new track to your existing project."""
 
-# The Export2 macro is used in export().
-# def export2():
-#    """Audacity Documentation: Exports selected audio to a named file. This version of export has the full set of export options. However, a current limitation is that the detailed option settings are always stored to and taken from saved preferences. The net effect is that for a given format, the most recently used options for that format will be used. In the current implementation, NumChannels should be 1 (mono) or 2 (stereo)."""
-#    pass # TODO
 
-# The OpenProject2 macro is used in open().
-# def open_project2():
-#    """Audacity Documentation: Opens a project."""
-#    pass # TODO
+@register_command
+class ImportLabels(Command):
+    """Launches a file selection window where you can choose to import a single text file into the project containing point or region labels. For more information about the syntax for labels files, see Importing and Exporting Labels."""
 
-# The SaveProject2 macro is used in save().
-# def save_project2():
-#    """Audacity Documentation: Saves a project."""
-#    pass # TODO
 
+@register_command
+class ImportMIDI(Command):
+    """Imports a MIDI (MIDI or MID extension) or Allegro (GRO) file to a Note Track where simple cut-and-paste edits can be performed. The result can be exported with the File > Export> > Export MIDI command. Note: Currently, MIDI and Allegro files cannot be played."""
 
-def drag():
-    """TODO
 
-    Audacity Documentation: Experimental command (called Drag in scripting) that moves the mouse. An Id can be used to move the mouse into a button to get the hover effect. Window names can be used instead. If To is specified, the command does a drag, otherwise just a hover.
-    """
-    raise NotImplementedError
+@register_command
+class ImportRaw(Command):
+    """Attempts to import an uncompressed audio file that might be "raw" data without any headers to define its format, might have incorrect headers or be otherwise partially corrupted, or might be in a format that Audacity is unable to recognize. Raw data in textual format cannot be imported."""
 
 
-def compare_audio():
-    """TODO
+@register_command
+class Undo(Command):
+    """Undoes the most recent editing action."""
 
-    Audacity Documentation: Compares selected range on two tracks. Reports on the differences and similarities.
-    """
-    raise NotImplementedError
 
+@register_command
+class Redo(Command):
+    """Redoes the most recently undone editing action."""
 
-def quick_help():
-    # type: () -> str
-    """TODO
 
-    Audacity Documentation: A brief version of help with some of the most essential information.
-    """
-    return do("QuickHelp")
+@register_command
+class Cut(Command):
+    """Removes the selected audio data and/or labels and places these on the Audacity clipboard. By default, any audio or labels to right of the selection are shifted to the left."""
 
 
-def manual():
-    # type: () -> str
-    """TODO
+@register_command
+class Delete(Command):
+    """Removes the selected audio data and/or labels without copying these to the Audacity clipboard. By default, any audio or labels to right of the selection are shifted to the left."""
 
-    Audacity Documentation: Opens the manual in the default browser."""
-    return do("Manual")
 
+@register_command
+class Copy(Command):
+    """Copies the selected audio data to the Audacity clipboard without removing it from the project."""
 
-def updates():
-    # type: () -> str
-    """TODO
 
-    Audacity Documentation: Checks online to see if this is the latest version of Audacity.
-    """
-    return do("Updates")
+@register_command
+class Paste(Command):
+    """Inserts whatever is on the Audacity clipboard at the position of the selection cursor in the project, replacing whatever audio data is currently selected, if any."""
 
 
-def about():
-    # type: () -> str
-    """TODO
+@register_command
+class Duplicate(Command):
+    """Creates a new track containing only the current selection as a new clip."""
 
-    Audacity Documentation: Brings a dialog with information about Audacity, such as who wrote it, what features are enabled and the GNU GPL v2 license.
-    """
-    return do("About")
 
+@register_command
+class EditMetaData(Command):
+    """The Metadata Editor modifies information about a track, such as the artist and genre.  Typically used with MP3 files."""
 
-def device_info():
-    # type: () -> str
-    """TODO
 
-    Audacity Documentation: Shows technical information about your detected audio device(s).
-    """
-    return do("DeviceInfo")
+@register_command
+class Preferences(Command):
+    """Preferences let you change most of the default behaviors and settings of Audacity. On Mac, Preferences are in the Audacity Menu and the default shortcut is ⌘  + ,."""
 
 
-def midi_device_info():
-    # type: () -> str
-    """TODO
+@register_command
+class SplitCut(Command):
+    """Same as Cut, but none of the audio data or labels to right of the selection are shifted."""
 
-    Audacity Documentation: Shows technical information about your detected MIDI device(s).
-    """
-    return do("MidiDeviceInfo")
 
+@register_command
+class SplitDelete(Command):
+    """Same as Delete, but none of the audio data or labels to right of the selection are shifted."""
 
-def log():
-    # type: () -> str
-    """TODO
 
-    Audacity Documentation: Launches the "Audacity Log" window, the log is largely a debugging aid, having timestamps for each entry.
-    """
-    return do("Log")
+@register_command
+class Silence(Command):
+    """Replaces the currently selected audio with absolute silence. Does not affect label tracks."""
 
 
-def crash_report():
-    # type: () -> str
-    """TODO
+@register_command
+class Trim(Command):
+    """Deletes all audio but the selection.  If there are other separate clips in the same track these are not removed or shifted unless trimming the entire length of a clip or clips. Does not affect label tracks."""
 
-    Audacity Documentation: Selecting this will generate a Debug report which could be useful in aiding the developers to identify bugs in Audacity or in third-party plugins.
-    """
-    return do("CrashReport")
 
+@register_command
+class Split(Command):
+    """Splits the current clip into two clips at the cursor point, or into three clips at the selection boundaries."""
 
-def check_deps():
-    # type: () -> str
-    """TODO
 
-    Audacity Documentation: Lists any WAV or AIFF audio files that your project depends on, and allows you to copy these files into the project.
-    """
-    return do("CheckDeps")
+@register_command
+class SplitNew(Command):
+    """Does a Split Cut on the current selection in the current track, then creates a new track and pastes the selection into the new track."""
 
 
-def prev_window():
-    # type: () -> str
-    """TODO
+@register_command
+class Join(Command):
+    """If you select an area that overlaps one or more clips, they are all joined into one large clip. Regions in-between clips become silence."""
 
-    Audacity Documentation: Navigates to the previous window."""
-    return do("PrevWindow")
 
+@register_command
+class Disjoin(Command):
+    """In a selection region that includes absolute silences, creates individual non-silent clips between the regions of silence. The silence becomes blank space between the clips."""
 
-def next_window():
-    # type: () -> str
-    """TODO
 
-    Audacity Documentation: Navigates to the next window."""
-    return do("NextWindow")
+@register_command
+class EditLabels(Command):
+    """Brings up a dialog box showing all of your labels in a keyboard-accessible tabular view. Handy buttons in the dialog let you insert or delete a label, or import and export labels to a file. See Label Editor for more details."""
+
+
+@register_command
+class AddLabel(Command):
+    """Creates a new, empty label at the cursor or at the selection region."""
+
+
+@register_command
+class AddLabelPlaying(Command):
+    """Creates a new, empty label at the current playback or recording position."""
+
+
+@register_command
+class PasteNewLabel(Command):
+    """Pastes the text on the Audacity clipboard at the cursor position in the currently selected label track. If there is no selection in the label track a point label is created. If a region is selected in the label track a region label is created. If no label track is selected one is created, and a new label is created."""
+
+
+@register_command
+class TypeToCreateLabel(Command):
+    """When a label track has the yellow focus border, if this option is on, just type to create a label.  Otherwise you must create a label first."""
+
+
+@register_command
+class CutLabels(Command):
+    """Same as the Cut command, but operates on labeled audio regions."""
+
+
+@register_command
+class DeleteLabels(Command):
+    """Same as the Delete command, but operates on labeled audio regions."""
+
+
+@register_command
+class SplitCutLabels(Command):
+    """Same as the Split Cut command, but operates on labeled audio regions."""
+
+
+@register_command
+class SplitDeleteLabels(Command):
+    """Same as the Split Delete command, but operates on labeled audio regions."""
+
+
+@register_command
+class SilenceLabels(Command):
+    """Same as the Silence Audio command, but operates on labeled audio regions."""
+
+
+@register_command
+class CopyLabels(Command):
+    """Same as the Copy command, but operates on labeled audio regions."""
+
+
+@register_command
+class SplitLabels(Command):
+    """Same as the Split command, but operates on labeled audio regions or points."""
+
+
+@register_command
+class JoinLabels(Command):
+    """Same as the Join command, but operates on labeled audio regions or points. You may need to select the audio and use Edit > Clip Boundaries > Join, to join all regions or points."""
+
+
+@register_command
+class DisjoinLabels(Command):
+    """Same as the Detach at Silences command, but operates on labeled audio regions."""
+
+
+@register_command
+class SelectAll(Command):
+    """Selects all of the audio in all of the tracks."""
+
+
+@register_command
+class SelectNone(Command):
+    """Deselects all of the audio in all of the tracks."""
+
+
+@register_command
+class SelCursorStoredCursor(Command):
+    """Selects from the position of the cursor to the previously stored cursor position"""
+
+
+@register_command
+class StoreCursorPosition(Command):
+    """Stores the current cursor position for use in a later selection"""
+
+
+@register_command
+class ZeroCross(Command):
+    """Moves the edges of a selection region (or the cursor position) slightly so they are at a rising zero crossing point."""
+
+
+@register_command
+class SelAllTracks(Command):
+    """Extends the current selection up and/or down into all tracks in the project."""
+
+
+@register_command
+class SelSyncLockTracks(Command):
+    """Extends the current selection up and/or down into all sync-locked tracks in the currently selected track group."""
+
+
+@register_command
+class SetLeftSelection(Command):
+    """When Audacity is playing, recording or paused, sets the left boundary of a potential selection by moving the cursor to the current position of the green playback cursor (or red recording cursor). Otherwise, opens the "Set Left Selection Boundary" dialog for adjusting the time position of the left-hand selection boundary. If there is no selection, moving the time digits backwards creates a selection ending at the former cursor position, and moving the time digits forwards provides a way to move the cursor forwards to an exact point."""
+
+
+@register_command
+class SetRightSelection(Command):
+    """When Audacity is playing, recording or paused, sets the right boundary of the selection, thus drawing the selection from the cursor position to the current position of the green playback cursor (or red recording cursor).  Otherwise, opens the "Set Right Selection Boundary" dialog for adjusting the time position of the right-hand selection boundary. If there is no selection, moving the time digits forwards creates a selection starting at the former cursor position, and moving the time digits backwards provides a way to move the cursor backwards to an exact point."""
+
+
+@register_command
+class SelTrackStartToCursor(Command):
+    """Selects a region in the selected track(s) from the start of the track to the cursor position."""
+
+
+@register_command
+class SelCursorToTrackEnd(Command):
+    """Selects a region in the selected track(s) from the cursor position to the end of the track."""
+
+
+@register_command
+class SelTrackStartToEnd(Command):
+    """Selects a region in the selected track(s) from the start of the track to the end of the track."""
+
+
+@register_command
+class SelSave(Command):
+    """Stores the end points of a selection for later reuse."""
+
+
+@register_command
+class SelRestore(Command):
+    """Retrieves the end points of a previously stored selection."""
+
+
+@register_command
+class ToggleSpectralSelection(Command):
+    """Changes between selecting a time range and selecting the last selected spectral selection in that time range. This command toggles the spectral selection even if not in Spectrogram view, but you must be in Spectrogram view to use the spectral selection in one of the Spectral edit effects."""
+
+
+@register_command
+class NextHigherPeakFrequency(Command):
+    """When in Spectrogram view, snaps the center frequency to the next higher frequency peak, moving the spectral selection upwards."""
+
+
+@register_command
+class NextLowerPeakFrequency(Command):
+    """When in Spectrogram views snaps the center frequency to the next lower frequency peak, moving the spectral selection downwards."""
+
+
+@register_command
+class SelPrevClipBoundaryToCursor(Command):
+    """Selects from the current cursor position back to the right-hand edge of the previous clip."""
+
+
+@register_command
+class SelCursorToNextClipBoundary(Command):
+    """Selects from the current cursor position forward to the left-hand edge of the next clip."""
+
+
+@register_command
+class SelPrevClip(Command):
+    """Moves the selection to the previous clip."""
+
+
+@register_command
+class SelNextClip(Command):
+    """Moves the selection to the next clip."""
+
+
+@register_command
+class UndoHistory(Command):
+    """Brings up the History window which can then be left open while using Audacity normally. History lists all undoable actions performed in the current project, including importing."""
+
+
+@register_command
+class Karaoke(Command):
+    """Brings up the Karaoke window, which displays the labels in a "bouncing ball" scrolling display"""
+
+
+@register_command
+class MixerBoard(Command):
+    """Mixer is an alternative view to the audio tracks in the main tracks window. Analogous to a hardware mixer board, each audio track is displayed in a Track Strip."""
+
+
+@register_command
+class ShowExtraMenus(Command):
+    """Shows extra menus with many extra less-used commands."""
+
+
+@register_command
+class ShowClipping(Command):
+    """Option to show or not show audio that is too loud (in red) on the wave form."""
+
+
+@register_command
+class ZoomIn(Command):
+    """Zooms in on the horizontal axis of the audio displaying more detail over a shorter length of time."""
+
+
+@register_command
+class ZoomNormal(Command):
+    """Zooms to the default view which displays about one inch per second."""
+
+
+@register_command
+class ZoomOut(Command):
+    """Zooms out displaying less detail over a greater length of time."""
+
+
+@register_command
+class ZoomSel(Command):
+    """Zooms in or out so that the selected audio fills the width of the window."""
+
+
+@register_command
+class ZoomToggle(Command):
+    """Changes the zoom back and forth between two preset levels."""
+
+
+@register_command
+class AdvancedVZoom(Command):
+    """Enable for left-click gestures in the vertical scale to control zooming."""
+
+
+@register_command
+class FitInWindow(Command):
+    """Zooms out until the entire project just fits in the window."""
+
+
+@register_command
+class FitV(Command):
+    """Adjusts the height of all the tracks until they fit in the project window."""
+
+
+@register_command
+class CollapseAllTracks(Command):
+    """Collapses all tracks to take up the minimum amount of space."""
+
+
+@register_command
+class ExpandAllTracks(Command):
+    """Expands all collapsed tracks to their original size before the last collapse."""
+
+
+@register_command
+class SkipSelStart(Command):
+    """When there is a selection, moves the cursor to the start of the selection and removes the selection."""
+
+
+@register_command
+class SkipSelEnd(Command):
+    """When there is a selection, moves the cursor to the end of the selection and removes the selection."""
+
+
+@register_command
+class ResetToolbars(Command):
+    """Using this command positions all toolbars in default location and size as they were when Audacity was first installed"""
+
+
+@register_command
+class ShowTransportTB(Command):
+    """Controls playback and recording and skips to start or end of project when neither playing or recording"""
+
+
+@register_command
+class ShowToolsTB(Command):
+    """Chooses various tools for selection, volume adjustment, zooming and time-shifting of audio"""
+
+
+@register_command
+class ShowRecordMeterTB(Command):
+    """Displays recording levels and toggles input monitoring when not recording"""
+
+
+@register_command
+class ShowPlayMeterTB(Command):
+    """Displays playback levels"""
+
+
+@register_command
+class ShowMixerTB(Command):
+    """Adjusts the recording and playback volumes of the devices currently selected in Device Toolbar"""
+
+
+@register_command
+class ShowEditTB(Command):
+    """Cut, copy, paste, trim audio, silence audio, undo, redo, zoom tools"""
+
+
+@register_command
+class ShowTranscriptionTB(Command):
+    """Plays audio at a slower or faster speed than normal, affecting pitch"""
+
+
+@register_command
+class ShowScrubbingTB(Command):
+    """Controls playback and recording and skips to start or end of project when neither playing or recording"""
+
+
+@register_command
+class ShowDeviceTB(Command):
+    """Selects audio host, recording device, number of recording channels and playback device"""
+
+
+@register_command
+class ShowSelectionTB(Command):
+    """Adjusts cursor and region position by keyboard input"""
+
+
+@register_command
+class ShowSpectralSelectionTB(Command):
+    """Displays and lets you adjust the current spectral (frequency) selection without having to be in Spectrogram view"""
+
+
+@register_command
+class RescanDevices(Command):
+    """Rescan for audio devices connected to your computer, and update the playback and recording dropdown menus in Device Toolbar"""
+
+
+@register_command
+class PlayStop(Command):
+    """Starts and stops playback or stops a recording (stopping does not change the restart position). Therefore using any play or record command after stopping with "Play/Stop" will start playback or recording from the same Timeline position it last started from. You can also assign separate shortcuts for Play and Stop."""
+
+
+@register_command
+class PlayStopSelect(Command):
+    """Starts playback like "Play/Stop", but stopping playback sets the restart position to the stop point. When stopped, this command is the same as "Play/Stop". When playing, this command stops playback and moves the cursor (or the start of the selection) to the position where playback stopped."""
+
+
+@register_command
+class Pause(Command):
+    """Temporarily pauses playing or recording without losing your place."""
+
+
+@register_command
+class Record1stChoice(Command):
+    """Starts recording at the end of the currently selected track(s)."""
+
+
+@register_command
+class Record2ndChoice(Command):
+    """Recording begins on a new track at either the current cursor location or at the beginning of the current selection."""
+
+
+@register_command
+class TimerRecord(Command):
+    """Brings up the Timer Record dialog."""
+
+
+@register_command
+class PunchAndRoll(Command):
+    """Re-record over audio, with a pre-roll of audio that comes before."""
+
+
+@register_command
+class Scrub(Command):
+    """Scrubbing is the action of moving the mouse pointer right or left so as to adjust the position, speed or direction of playback, listening to the audio at the same time."""
+
+
+@register_command
+class Seek(Command):
+    """Seeking is similar to Scrubbing except that it is playback with skips, similar to using the seek button on a CD player."""
+
+
+@register_command
+class ToggleScrubRuler(Command):
+    """Shows (or hides) the scrub ruler, which is just below the timeline."""
+
+
+@register_command
+class CursSelStart(Command):
+    """Moves the left edge of the current selection to the center of the screen, without changing the zoom level."""
+
+
+@register_command
+class CursSelEnd(Command):
+    """Moves the right edge of the current selection to the center of the screen, without changing the zoom level."""
+
+
+@register_command
+class CursTrackStart(Command):
+    """Moves the cursor to the start of the selected track."""
+
+
+@register_command
+class CursTrackEnd(Command):
+    """Moves the cursor to the end of the selected track."""
+
+
+@register_command
+class CursPrevClipBoundary(Command):
+    """Moves the cursor position back to the right-hand edge of the previous clip"""
+
+
+@register_command
+class CursNextClipBoundary(Command):
+    """Moves the cursor position forward to the left-hand edge of the next clip"""
+
+
+@register_command
+class CursProjectStart(Command):
+    """Moves the cursor to the beginning of the project."""
+
+
+@register_command
+class CursProjectEnd(Command):
+    """Moves the cursor to the end of the project."""
+
+
+@register_command
+class SoundActivationLevel(Command):
+    """Sets the activation level above which Sound Activated Recording will record."""
+
+
+@register_command
+class SoundActivation(Command):
+    """Toggles on and off the Sound Activated Recording option."""
+
+
+@register_command
+class PinnedHead(Command):
+    """You can change Audacity to play and record with a fixed head pinned to the Timeline.  You can adjust the position of the fixed head by dragging it"""
+
+
+@register_command
+class Overdub(Command):
+    """Toggles on and off the Hear other tracks during recording (overdub) option."""
+
+
+@register_command
+class SWPlaythrough(Command):
+    """Toggles on and off the Enable audible input monitoring (Software Playthrough) option."""
+
+
+@register_command
+class Resample(Command):
+    """Allows you to resample the selected track(s) to a new sample rate for use in the project"""
+
+
+@register_command
+class RemoveTracks(Command):
+    """Removes the selected track(s) from the project. Even if only part of a track is selected, the entire track is removed."""
+
+
+@register_command
+class SyncLock(Command):
+    """Ensures that length changes occurring anywhere in a defined group of tracks also take place in all audio or label tracks in that group."""
+
+
+@register_command
+class NewMonoTrack(Command):
+    """Creates a new empty mono audio track."""
+
+
+@register_command
+class NewStereoTrack(Command):
+    """Adds an empty stereo track to the project"""
+
+
+@register_command
+class NewLabelTrack(Command):
+    """Adds an empty label track to the project"""
+
+
+@register_command
+class NewTimeTrack(Command):
+    """Adds an empty time track to the project.  Time tracks are used to speed up and slow down audio."""
+
+
+@register_command
+class StereoToMono(Command):
+    """Converts the selected stereo track(s) into the same number of mono tracks, combining left and right channels equally by averaging the volume of both channels."""
+
+
+@register_command
+class MixAndRender(Command):
+    """Mixes down all selected tracks to a single mono or stereo track, rendering to the waveform all real-time transformations that had been applied (such as track gain, panning, amplitude envelopes or a change in Project Sample Rate)."""
+
+
+@register_command
+class MixAndRenderToNewTrack(Command):
+    """Same as Tracks > Mix and Render except that the original tracks are preserved rather than being replaced by the resulting "Mix" track."""
+
+
+@register_command
+class MuteAllTracks(Command):
+    """Mutes all the audio tracks in the project as if you had used the mute buttons from the Track Control Panel on each track."""
+
+
+@register_command
+class UnmuteAllTracks(Command):
+    """Unmutes all the audio tracks in the project as if you had released the mute buttons from the Track Control Panel on each track."""
+
+
+@register_command
+class MuteTracks(Command):
+    """Mutes the selected tracks."""
+
+
+@register_command
+class UnmuteTracks(Command):
+    """Unmutes the selected tracks."""
+
+
+@register_command
+class PanLeft(Command):
+    """Pan selected audio to left speaker"""
+
+
+@register_command
+class PanRight(Command):
+    """Pan selected audio centrally."""
+
+
+@register_command
+class PanCenter(Command):
+    """Pan selected audio to right speaker."""
+
+
+@register_command
+class Align_EndToEnd(Command):
+    """Aligns the selected tracks one after the other, based on their top-to-bottom order in the project window."""
+
+
+@register_command
+class Align_Together(Command):
+    """Align the selected tracks so that they start at the same (averaged) start time."""
+
+
+@register_command
+class Align_StartToZero(Command):
+    """Aligns the start of selected tracks with the start of the project."""
+
+
+@register_command
+class Align_StartToSelStart(Command):
+    """Aligns the start of selected tracks with the current cursor position or with the start of the current selection."""
+
+
+@register_command
+class Align_StartToSelEnd(Command):
+    """Aligns the start of selected tracks with the end of the current selection."""
+
+
+@register_command
+class Align_EndToSelStart(Command):
+    """Aligns the end of selected tracks with the current cursor position or with the start of the current selection."""
+
+
+@register_command
+class Align_EndToSelEnd(Command):
+    """Aligns the end of selected tracks with the end of the current selection."""
+
+
+@register_command
+class MoveSelectionWithTracks(Command):
+    """Toggles on/off the selection moving with the realigned tracks, or staying put."""
+
+
+@register_command
+class SortByTime(Command):
+    """Sort tracks in order of start time."""
+
+
+@register_command
+class SortByName(Command):
+    """Sort tracks in order by name."""
+
+
+@register_command
+class ManageGenerators(Command):
+    """Selecting this option from the Effect Menu (or the Generate Menu or Analyze Menu) takes you to a dialog where you can enable or disable particular Effects, Generators and Analyzers in Audacity. Even if you do not add any third-party plugins, you can use this to make the Effect menu shorter or longer as required.  For details see Plugin Manager."""
+
+
+@register_command
+class BuiltIin(Command):
+    """Shows the list of available Audacity built-in effects but only if the user has effects "Grouped by Type" in Effects Preferences."""
+
+
+@register_command
+class Nyquist(Command):
+    """Shows the list of available Nyquist effects but only if the user has effects "Grouped by Type" in Effects Preferences."""
+
+
+@register_command
+class Chirp(Command):
+    """Generates four different types of tone waveforms like the Tone Generator, but additionally allows setting of the starting and ending amplitude and frequency."""
+
+    # double StartFreq, (default:440)
+    # double EndFreq, (default:1320)
+    # double StartAmp, (default:0.8)
+    # double EndAmp, (default:0.1)
+    # enum Waveform, (default:Sine)
+
+    #  Sine
+    #  Square
+    #  Sawtooth
+    #  Square, no alias
+    # enum Interpolation, (default:Linear)
+
+    #  Linear
+    #  Logarithmic
+
+
+@register_command
+class DtmfTones(Command):
+    """Generates dual-tone multi-frequency (DTMF) tones like those produced by the keypad on telephones."""
+
+    # string Sequence, (default:audacity)
+    # double Duty Cycle, (default:55)
+    # double Amplitude, (default:0.8)
+
+
+@register_command
+class Noise(Command):
+    """Generates 'white', 'pink' or 'brown' noise."""
+
+    # enum Type, (default:White)
+    #  White
+    #  Pink
+    #  Brownian
+    # double Amplitude, (default:0.8)
+
+
+@register_command
+class Tone(Command):
+    """Generates one of four different tone waveforms: Sine, Square, Sawtooth or Square (no alias), and a frequency between 1 Hz and half the current [[Audio Settings Preferences|Project Sample Rate."""
+
+    # double Frequency, (default:440)
+    # double Amplitude, (default:0.8)
+    # enum Waveform, (default:Sine)
+
+    #  Sine
+    #  Square
+    #  Sawtooth
+    #  Square, no alias
+    # enum Interpolation, (default:Linear)
+
+    #  Linear
+    #  Logarithmic
+
+
+@register_command
+class Pluck(Command):
+    """A synthesized pluck tone with abrupt or gradual fade-out, and selectable pitch corresponding to a MIDI note."""
+
+    # int pitch, (default:0)
+    # enum fade, (default:Abrupt)
+
+    #  Abrupt
+    #  Gradual
+    # double dur, (default:0)
+
+
+@register_command
+class RhythmTrack(Command):
+    """Generates a track with regularly spaced sounds at a specified tempo and number of beats per measure (bar)."""
+
+    # double tempo, (default:0)
+    # int timesig, (default:0)
+    # double swing, (default:0)
+    # int bars, (default:0)
+    # double click-track-dur, (default:0)
+    # double offset, (default:0)
+    # enum click-type, (default:Metronome)
+
+    #  Metronome
+    #  Ping (short)
+    #  Ping (long)
+    #  Cowbell
+    #  ResonantNoise
+    #  NoiseClick
+    #  Drip (short)
+    #  Drip (long)
+    # int high, (default:0)
+    # int low, (default:0)
+
+
+@register_command
+class RissetDrum(Command):
+    """Produces a realistic drum sound."""
+
+    # double freq, (default:0)
+    # double decay, (default:0)
+    # double cf, (default:0)
+    # double bw, (default:0)
+    # double noise, (default:0)
+    # double gain, (default:0)
+
+
+@register_command
+class ManageEffects(Command):
+    """Selecting this option from the Effect Menu (or the Generate Menu or Analyze Menu) takes you to a dialog where you can enable or disable particular Effects, Generators and Analyzers in Audacity. Even if you do not add any third-party plugins, you can use this to make the Effect menu shorter or longer as required.  For details see Plugin Manager."""
+
+
+@register_command
+class RepeatLastEffect(Command):
+    """Repeats the last used effect at its last used settings and without displaying any dialog."""
+
+
+@register_command
+class LADSPA(Command):
+    """Shows the list of available LADSPA effects but only if the user has effects "Grouped by Type" in Effects Preferences."""
+
+
+@register_command
+class Amplify(Command):
+    """Increases or decreases the volume of the audio you have selected."""
+
+    # float Ratio, (default:0.9)
+    # bool AllowClipping, (default:False)
+
+
+@register_command
+class AutoDuck(Command):
+    """Reduces (ducks) the volume of one or more tracks whenever the volume of a specified "control" track reaches a particular level. Typically used to make a music track softer whenever speech in a commentary track is heard."""
+
+    # double DuckAmountDb, (default:-12)
+    # double InnerFadeDownLen, (default:0)
+    # double InnerFadeUpLen, (default:0)
+    # double OuterFadeDownLen, (default:0.5)
+    # double OuterFadeUpLen, (default:0.5)
+    # double ThresholdDb, (default:-30)
+    # double MaximumPause, (default:1)
+
+
+@register_command
+class BassAndTreble(Command):
+    """Increases or decreases the lower  frequencies  and higher frequencies of your audio independently; behaves just like the bass and treble controls on a stereo system."""
+
+    # double Bass, (default:0)
+    # double Treble, (default:0)
+    # double Gain, (default:0)
+    # bool Link Sliders, (default:False)
+
+
+@register_command
+class ChangePitch(Command):
+    """Change the pitch of a selection without changing its tempo."""
+
+    # double Percentage, (default:0)
+    # bool SBSMS, (default:False)
+
+
+@register_command
+class ChangeSpeed(Command):
+    """Change the speed of a selection, also changing its pitch."""
+
+    # double Percentage, (default:0)
+
+
+@register_command
+class ChangeTempo(Command):
+    """Change the tempo and length (duration) of a selection without changing its pitch."""
+
+    # double Percentage, (default:0)
+    # bool SBSMS, (default:False)
+
+
+@register_command
+class ClickRemoval(Command):
+    """Click Removal is designed to remove clicks on audio tracks and is especially suited to declicking recordings made from vinyl records."""
+
+    # int Threshold, (default:200)
+    # int Width, (default:20)
+
+
+@register_command
+class Compressor(Command):
+    """Compresses the dynamic range by two alternative methods. The default "RMS" method makes the louder parts softer, but leaves the quieter audio alone. The alternative "peaks" method makes the entire audio louder, but amplifies the louder parts less than the quieter parts. Make-up gain can be applied to either method, making the result as loud as possible without clipping, but not changing the dynamic range further."""
+
+    # double Threshold, (default:-12)
+    # double NoiseFloor, (default:-40)
+    # double Ratio, (default:2)
+    # double AttackTime, (default:0.2)
+    # double ReleaseTime, (default:1)
+    # bool Normalize, (default:True)
+    # bool UsePeak, (default:False)
+
+
+@register_command
+class Distortion(Command):
+    """Use the Distortion effect to make the audio sound distorted. By distorting the waveform the frequency content is changed, which will often make the sound "crunchy" or "abrasive".  Technically this effect is a waveshaper. The result of waveshaping is equivalent to applying non-linear amplification to the audio waveform. Preset shaping functions are provided, each of which produces a different type of distortion."""
+
+    # enum Type, (default:Hard Clipping)
+    #  Hard Clipping
+    #  Soft Clipping
+    #  Soft Overdrive
+    #  Medium Overdrive
+    #  Hard Overdrive
+    #  Cubic Curve (odd harmonics)
+    #  Even Harmonics
+    #  Expand and Compress
+    #  Leveller
+    #  Rectifier Distortion
+    #  Hard Limiter 1413
+    # bool DC Block, (default:False)
+    # double Threshold dB, (default:-6)
+    # double Noise Floor, (default:-70)
+    # double Parameter 1, (default:50)
+    # double Parameter 2, (default:50)
+    # int Repeats, (default:1)
+
+
+@register_command
+class Echo(Command):
+    """Repeats the selected audio again and again, normally softer each time and normally not blended into the original sound until some time after it starts. The delay time between each repeat is fixed, with no pause in between each repeat. For a more configurable echo effect with a variable delay time and pitch-changed echoes, see Delay."""
+
+    # float Delay, (default:1)
+    # float Decay, (default:0.5)
+
+
+@register_command
+class FadeIn(Command):
+    """Applies a linear fade-in to the selected audio - the rapidity of the fade-in depends entirely on the length of the selection it is applied to.  For a more customizable logarithmic fade, use the Envelope Tool on the Tools Toolbar."""
+
+
+@register_command
+class FadeOut(Command):
+    """Applies a linear fade-out to the selected audio - the rapidity of the fade-out depends entirely on the length of the selection it is applied to.  For a more customizable logarithmic fade, use the Envelope Tool on the Tools Toolbar."""
+
+
+@register_command
+class FilterCurve(Command):
+    """Adjusts the volume levels of particular frequencies"""
+
+    # size_t FilterLength, (default:8191)
+    # bool InterpolateLin, (default:False)
+    # enum InterpolationMethod, (default:B-spline)
+
+    #  B-spline
+    #  Cosine
+    #  Cubic
+    # double f0, (default:0)
+    # double v0, (default:0)
+
+
+@register_command
+class GraphicEq(Command):
+    """Adjusts the volume levels of particular frequencies"""
+
+    # size_t FilterLength, (default:8191)
+    # bool InterpolateLin, (default:False)
+    # enum InterpolationMethod, (default:B-spline)
+
+    #  B-spline
+    #  Cosine
+    #  Cubic
+    # double f0, (default:0)
+    # double v0, (default:0)
+
+
+@register_command
+class Invert(Command):
+    """This effect flips the audio samples upside-down.  This normally does not affect the sound of the audio at all.  It is occasionally useful for vocal removal."""
+
+
+@register_command
+class LoudnessNormalization(Command):
+    """Changes the perceived loudness of the audio."""
+
+    # bool StereoIndependent, (default:False)
+    # double LUFSLevel, (default:-23)
+    # double RMSLevel, (default:-20)
+    # bool DualMono, (default:True)
+    # int NormalizeTo, (default:0)
+
+
+@register_command
+class NoiseReduction(Command):
+    """This effect is ideal for reducing constant background noise such as fans, tape noise, or hums.  It will not work very well for removing talking or music in the background.  More details hereThis effect is not currently available from scripting."""
+
+
+@register_command
+class Normalize(Command):
+    """Use the Normalize effect to set the maximum amplitude of a track, equalize the amplitudes of the left and right channels of a stereo track and optionally remove any DC offset from the track"""
+
+    # double PeakLevel, (default:-1)
+    # bool ApplyGain, (default:True)
+    # bool RemoveDcOffset, (default:True)
+    # bool StereoIndependent, (default:False)
+
+
+@register_command
+class Paulstretch(Command):
+    """Use Paulstretch only for an extreme time-stretch or "stasis" effect, This may be useful for synthesizer pad sounds, identifying performance glitches or just creating interesting aural textures. Use Change Tempo or Sliding Time Scale rather than Paulstretch for tasks like slowing down a song to a "practice" tempo."""
+
+    # float Stretch Factor, (default:10)
+    # float Time Resolution, (default:0.25)
+
+
+@register_command
+class Phaser(Command):
+    """The name "Phaser" comes from "Phase Shifter", because it works by combining phase-shifted signals with the original signal.  The movement of the phase-shifted signals is controlled using a Low Frequency Oscillator (LFO)."""
+
+    # int Stages, (default:2)
+    # int DryWet, (default:128)
+    # double Freq, (default:0.4)
+    # double Phase, (default:0)
+    # int Depth, (default:100)
+    # int Feedback, (default:0)
+    # double Gain, (default:-6)
+
+
+@register_command
+class Repair(Command):
+    """Fix one particular short click, pop or other glitch no more than 128 samples long."""
+
+
+@register_command
+class Repeat(Command):
+    """Repeats the selection the specified number of times."""
+
+    # int Count, (default:1)
+
+
+@register_command
+class Reverb(Command):
+    """A configurable stereo reverberation effect with built-in and user-added presets. It can be used to add ambience (an impression of the space in which a sound occurs) to a mono sound. Also use it to increase reverberation in stereo audio that sounds too "dry" or "close"."""
+
+    # double RoomSize, (default:75)
+    # double Delay, (default:10)
+    # double Reverberance, (default:50)
+    # double HfDamping, (default:50)
+    # double ToneLow, (default:100)
+    # double ToneHigh, (default:100)
+    # double WetGain, (default:-1)
+    # double DryGain, (default:-1)
+    # double StereoWidth, (default:100)
+    # bool WetOnly, (default:False)
+
+
+@register_command
+class Reverse(Command):
+    """Reverses the selected audio; after the effect the end of the audio will be heard first and the beginning last."""
+
+
+@register_command
+class SlidingStretch(Command):
+    """This effect allows you to make a continuous change to the tempo and/or pitch of a selection by choosing initial and/or final change values."""
+
+    # double RatePercentChangeStart, (default:0)
+    # double RatePercentChangeEnd, (default:0)
+    # double PitchHalfStepsStart, (default:0)
+    # double PitchHalfStepsEnd, (default:0)
+    # double PitchPercentChangeStart, (default:0)
+    # double PitchPercentChangeEnd, (default:0)
+
+
+@register_command
+class TruncateSilence(Command):
+    """Automatically try to find and eliminate audible silences. Do not use this with faded audio."""
+
+    # double Threshold, (default:-20)
+    # enum Action, (default:Truncate Detected Silence)
+
+    #  Truncate Detected Silence
+    #  Compress Excess Silence
+    # double Minimum, (default:0.5)
+    # double Truncate, (default:0.5)
+    # double Compress, (default:50)
+    # bool Independent, (default:False)
+
+
+@register_command
+class Wahwah(Command):
+    """Rapid tone quality variations, like that guitar sound so popular in the 1970's."""
+
+    # double Freq, (default:1.5)
+    # double Phase, (default:0)
+    # int Depth, (default:70)
+    # double Resonance, (default:2.5)
+    # int Offset, (default:30)
+    # double Gain, (default:-6)
+
+
+@register_command
+class AdjustableFade(Command):
+    """enables you to control the shape of the fade (non-linear fading) to be applied by adjusting various parameters; allows partial (that is not from or to zero) fades up or down."""
+
+    # enum type, (default:Up)
+    #  Up
+    #  Down
+    #  SCurveUp
+    #  SCurveDown
+    # double curve, (default:0)
+    # enum units, (default:Percent)
+
+    #  Percent
+    #  dB
+    # double gain0, (default:0)
+    # double gain1, (default:0)
+    # enum preset, (default:None)
+
+    #  None
+    #  LinearIn
+    #  LinearOut
+    #  ExponentialIn
+    #  ExponentialOut
+    #  LogarithmicIn
+    #  LogarithmicOut
+    #  RoundedIn
+    #  RoundedOut
+    #  CosineIn
+    #  CosineOut
+    #  SCurveIn
+    #  SCurveOut
+
+
+@register_command
+class ClipFix(Command):
+    """Clip Fix attempts to reconstruct clipped regions by interpolating the lost signal."""
+
+    # double threshold, (default:0)
+    # double gain, (default:0)
+
+
+@register_command
+class CrossfadeClips(Command):
+    """Use Crossfade Clips to apply a simple crossfade to a selected pair of clips in a single audio track."""
+
+    #
+
+
+@register_command
+class CrossfadeTracks(Command):
+    """Use Crossfade Tracks to make a smooth transition between two overlapping tracks one above the other. Place the track to be faded out above the track to be faded in then select the overlapping region in both tracks and apply the effect."""
+
+    # enum type, (default:ConstantGain)
+    #  ConstantGain
+    #  ConstantPower1
+    #  ConstantPower2
+    #  CustomCurve
+    # double curve, (default:0)
+    # enum direction, (default:Automatic)
+
+    #  Automatic
+    #  OutIn
+    #  InOut
+
+
+@register_command
+class Delay(Command):
+    """A configurable delay effect with variable delay time and pitch shifting of the delays."""
+
+    # enum delay-type, (default:Regular)
+    #  Regular
+    #  BouncingBall
+    #  ReverseBouncingBall
+    # double dgain, (default:0)
+    # double delay, (default:0)
+    # enum pitch-type, (default:PitchTempo)
+
+    #  PitchTempo
+    #  LQPitchShift
+    # double shift, (default:0)
+    # int number, (default:0)
+    # enum constrain, (default:Yes)
+
+    #  Yes
+    #  No
+
+
+@register_command
+class HighPassFilter(Command):
+    """Passes frequencies above its cutoff frequency and attenuates frequencies below its cutoff frequency."""
+
+    # double frequency, (default:0)
+    # enum rolloff, (default:dB6)
+
+    #  dB6
+    #  dB12
+    #  dB24
+    #  dB36
+    #  dB48
+
+
+@register_command
+class Limiter(Command):
+    """Limiter passes signals below a specified input level unaffected or gently reduced, while preventing the peaks of stronger signals from exceeding this threshold.  Mastering engineers often use this type of dynamic range compression combined with make-up gain to increase the perceived loudness of an audio recording during the audio mastering process."""
+
+    # enum type, (default:SoftLimit)
+    #  SoftLimit
+    #  HardLimit
+    #  SoftClip
+    #  HardClip
+    # double gain-L, (default:0)
+    # double gain-R, (default:0)
+    # double thresh, (default:0)
+    # double hold, (default:0)
+    # enum makeup, (default:No)
+
+    #  No
+    #  Yes
+
+
+@register_command
+class LowPassFilter(Command):
+    """Passes frequencies below its cutoff frequency and attenuates frequencies above its cutoff frequency."""
+
+    # double frequency, (default:0)
+    # enum rolloff, (default:dB6)
+
+    #  dB6
+    #  dB12
+    #  dB24
+    #  dB36
+    #  dB48
+
+
+@register_command
+class NotchFilter(Command):
+    """Greatly attenuate ("notch out"), a narrow frequency band. This is a good way to remove mains hum or a whistle confined to a specific frequency with minimal damage to the remainder of the audio."""
+
+    # double frequency, (default:0)
+    # double q, (default:0)
+
+
+@register_command
+class SpectralEditMultiTool(Command):
+    """When the selected track is in spectrogram or spectrogram log(f) view, applies a  notch filter, high pass filter or low pass filter according to the spectral selection made. This effect can also be used to change the audio quality as an alternative to using Equalization."""
+
+    #
+
+
+@register_command
+class SpectralEditParametricEq(Command):
+    """When the selected track is in spectrogram or spectrogram log(f) view and the spectral selection has a center frequency and an upper and lower boundary, performs the specified band cut or band boost. This can be used as an alternative to Equalization or may also be useful to repair damaged audio by reducing frequency spikes or boosting other frequencies to mask spikes."""
+
+    # double control-gain, (default:0)
+
+
+@register_command
+class SpectralEditShelves(Command):
+    """When the selected track is in spectrogram or spectrogram log(f) view, applies either a low- or high-frequency shelving filter or both filters, according to the spectral selection made. This can be used as an alternative to Equalization or may also be useful to repair damaged audio by reducing frequency spikes or boosting other frequencies to mask spikes."""
+
+    # double control-gain, (default:0)
+
+
+@register_command
+class StudioFadeOut(Command):
+    """Applies a more musical fade out to the selected audio, giving a more pleasing sounding result."""
+
+    #
+
+
+@register_command
+class Tremolo(Command):
+    """Modulates the volume of the selection at the depth and rate selected in the dialog. The same as the tremolo effect familiar to guitar and keyboard players."""
+
+    # enum wave, (default:Sine)
+    #  Sine
+    #  Triangle
+    #  Sawtooth
+    #  InverseSawtooth
+    #  Square
+    # int phase, (default:0)
+    # int wet, (default:0)
+    # double lfo, (default:0)
+
+
+@register_command
+class VocalReductionAndIsolation(Command):
+    """Attempts to remove or isolate center-panned audio from a stereo track.  Most  "Remove" options in this effect preserve the stereo image."""
+
+    # enum action, (default:RemoveToMono)
+    #  RemoveToMono
+    #  Remove
+    #  Isolate
+    #  IsolateInvert
+    #  RemoveCenterToMono
+    #  RemoveCenter
+    #  IsolateCenter
+    #  IsolateCenterInvert
+    #  Analyze
+    # double strength, (default:0)
+    # double low-transition, (default:0)
+    # double high-transition, (default:0)
+
+
+@register_command
+class Vocoder(Command):
+    """Synthesizes audio (usually a voice) in the left channel of a stereo track with a carrier wave (typically white noise) in the right channel to produce a modified version of the left channel. Vocoding a normal voice with white noise will produce a robot-like voice for special effects."""
+
+    # double dst, (default:0)
+    # enum mst, (default:BothChannels)
+
+    #  BothChannels
+    #  RightOnly
+    # int bands, (default:0)
+    # double track-vl, (default:0)
+    # double noise-vl, (default:0)
+    # double radar-vl, (default:0)
+    # double radar-f, (default:0)
+
+
+@register_command
+class ManageAnalyzers(Command):
+    """Selecting this option from the Effect Menu (or the Generate Menu or Analyze Menu) takes you to a dialog where you can enable or disable particular Effects, Generators and Analyzers in Audacity. Even if you do not add any third-party plugins, you can use this to make the Effect menu shorter or longer as required.  For details see Plugin Manager."""
+
+
+@register_command
+class ContrastAnalyser(Command):
+    """Analyzes a single mono or stereo speech track to determine the average RMS difference in volume (contrast) between foreground speech and background music, audience noise or similar. The purpose is to determine if the speech will be intelligible to the hard of hearing."""
+
+
+@register_command
+class PlotSpectrum(Command):
+    """Takes the selected audio (which is a set of sound pressure values at points in time) and converts it to a graph of frequencies against amplitudes."""
+
+
+@register_command
+class FindClipping(Command):
+    """Displays runs of clipped samples in a Label Track, as a screen-reader accessible alternative to View > Show Clipping in Waveform. A run must include at least one clipped sample, but may include unclipped samples too."""
+
+    # int Duty Cycle Start, (default:3)
+    # int Duty Cycle End, (default:3)
+
+
+@register_command
+class BeatFinder(Command):
+    """Attempts to place labels at beats which are much louder than the surrounding audio. It's a fairly rough and ready tool, and will not necessarily work well on a typical modern pop music track with compressed dynamic range. If you do not get enough beats detected, try reducing the "Threshold Percentage" setting."""
+
+    # int thresval, (default:0)
+
+
+@register_command
+class LabelSounds(Command):
+    """Divides up a track by placing labels for areas of sound that are separated by silence."""
+
+    # double threshold, (default:0)
+    # enum measurement, (default:peak)
+
+    #  peak
+    #  avg
+    #  rms
+    # double sil-dur, (default:0)
+    # double snd-dur, (default:0)
+    # enum type, (default:before)
+
+    #  before
+    #  after
+    #  around
+    #  between
+    # double pre-offset, (default:0)
+    # double post-offset, (default:0)
+    # string text, (default:"")
+
+
+@register_command
+class ManageTools(Command):
+    """Selecting this option from the Effect Menu (or the Generate Menu or Analyze Menu) takes you to a dialog where you can enable or disable particular Effects, Generators and Analyzers in Audacity. Even if you do not add any third-party plugins, you can use this to make the Effect menu shorter or longer as required.  For details see Plugin Manager."""
+
+
+@register_command
+class ManageMacros(Command):
+    """Creates a new macro or edits an existing macro."""
+
+
+@register_command
+class ApplyMacro(Command):
+    """Displays a menu with list of all your Macros. Selecting any of these Macros by clicking on it will cause that Macro to be applied to the current project."""
+
+
+@register_command
+class Screenshot(Command):
+    """A tool, mainly used in documentation, to capture screenshots of Audacity."""
+
+    # string Path, (default:)
+    # enum CaptureWhat, (default:Window)
+
+    #  Window
+    #  FullWindow
+    #  WindowPlus
+    #  Fullscreen
+    #  Toolbars
+    #  Effects
+    #  Scriptables
+    #  Preferences
+    #  Selectionbar
+    #  SpectralSelection
+    #  Timer
+    #  Tools
+    #  Transport
+    #  Mixer
+    #  Meter
+    #  PlayMeter
+    #  RecordMeter
+    #  Edit
+    #  Device
+    #  Scrub
+    #  Play-at-Speed
+    #  Trackpanel
+    #  Ruler
+    #  Tracks
+    #  FirstTrack
+    #  FirstTwoTracks
+    #  FirstThreeTracks
+    #  FirstFourTracks
+    #  SecondTrack
+    #  TracksPlus
+    #  FirstTrackPlus
+    #  AllTracks
+    #  AllTracksPlus
+    # enum Background, (default:None)
+
+    #  Blue
+    #  White
+    #  None
+    # bool ToTop, (default:True)
+
+
+@register_command
+class Benchmark(Command):
+    """A tool for measuring the performance of one part of Audacity."""
+
+
+@register_command
+class NyquistPrompt(Command):
+    """Brings up a dialog where you can enter Nyquist commands. Nyquist is a programming language for generating, processing and analyzing audio."""
+
+    # string Command, (default:)
+    # int Version, (default:3)
+
+
+@register_command
+class NyquistPlugInInstaller(Command):
+    """A  Nyquist plugin that simplifies the installation of other Nyquist plugins."""
+
+    # string files, (default:)
+    # enum overwrite, (default:Disallow)
+
+    #  Disallow
+    #  Allow
+
+
+@register_command
+class RegularIntervalLabels(Command):
+    """Places labels in a long track so as to divide it into smaller, equally sized  segments."""
+
+    # enum mode, (default:Both)
+    #  Both
+    #  Number
+    #  Interval
+    # int totalnum, (default:0)
+    # double interval, (default:0)
+    # double region, (default:0)
+    # enum adjust, (default:No)
+
+    #  No
+    #  Yes
+    # string labeltext, (default:)
+    # enum zeros, (default:TextOnly)
+
+    #  TextOnly
+    #  OneBefore
+    #  TwoBefore
+    #  ThreeBefore
+    #  OneAfter
+    #  TwoAfter
+    #  ThreeAfter
+    # int firstnum, (default:0)
+    # enum verbose, (default:Details)
+
+    #  Details
+    #  Warnings
+    #  None
+
+
+@register_command
+class SampleDataExport(Command):
+    """Reads the values of successive samples from the selected audio and prints this data to a plain text, CSV or HTML file."""
+
+    # int number, (default:0)
+    # enum units, (default:dB)
+
+    #  dB
+    #  Linear
+    # string filename, (default:)
+    # enum fileformat, (default:None)
+
+    #  None
+    #  Count
+    #  Time
+    # enum header, (default:None)
+
+    #  None
+    #  Minimal
+    #  Standard
+    #  All
+    # string optext, (default:)
+    # enum channel-layout, (default:SameLine)
+
+    #  SameLine
+    #  Alternate
+    #  LFirst
+    # enum messages, (default:Yes)
+
+    #  Yes
+    #  Errors
+    #  None
+
+
+@register_command
+class SampleDataImport(Command):
+    """Reads numeric values from a plain ASCII text file and creates a PCM sample for each numeric value read."""
+
+    # string filename, (default:)
+    # enum bad-data, (default:ThrowError)
+
+    #  ThrowError
+    #  ReadAsZero
+
+
+@register_command
+class ApplyMacrosPalette(Command):
+    """Displays a menu with list of all your Macros which can be applied to the current project or to audio files.."""
+
+
+@register_command
+class Macro_FadeEnds(Command):
+    """Fades in the first second and fades out the last second of a track."""
+
+
+@register_command
+class Macro_MP3Conversion(Command):
+    """Converts MP3."""
+
+
+@register_command
+class FullScreenOnOff(Command):
+    """Toggle full screen mode with no title bar"""
+
+
+@register_command
+class Play(Command):
+    """Play (or stop) audio"""
+
+
+@register_command
+class Stop(Command):
+    """Stop audio"""
+
+
+@register_command
+class PlayOneSec(Command):
+    """Plays for one second centered on the current mouse pointer position (not from the current cursor position). See this page for an example."""
+
+
+@register_command
+class PlayToSelection(Command):
+    """Plays to or from the current mouse pointer position to or from the start or end of the selection, depending on the pointer position. See this page for more details."""
+
+
+@register_command
+class PlayBeforeSelectionStart(Command):
+    """Plays a short period before the start of the selected audio, the period before shares the setting of the cut preview."""
+
+
+@register_command
+class PlayAfterSelectionStart(Command):
+    """Plays a short period after the start of the selected audio, the period after shares the setting of the cut preview."""
+
+
+@register_command
+class PlayBeforeSelectionEnd(Command):
+    """Plays a short period before the end of the selected audio, the period before shares the setting of the cut preview."""
+
+
+@register_command
+class PlayAfterSelectionEnd(Command):
+    """Plays a short period after the end of the selected audio, the period after shares the setting of the cut preview."""
+
+
+@register_command
+class PlayBeforeAndAfterSelectionStart(Command):
+    """Plays a short period  before and after the start of the selected audio, the periods before and after share the setting of the cut preview."""
+
+
+@register_command
+class PlayBeforeAndAfterSelectionEnd(Command):
+    """Plays a short period  before and after the end of the selected audio, the periods before and after share the setting of the cut preview."""
+
+
+@register_command
+class PlayCutPreview(Command):
+    """Plays audio excluding the selection"""
+
+
+@register_command
+class ScrubBackwards(Command):
+    """Does nothing, is there so that users can know what the default shortcut key is, and so they can change it in Shortcuts Preferences if they want to."""
+
+
+@register_command
+class ScrubForwards(Command):
+    """Does nothing, is there so that users can know what the default shortcut key is, and so they can change it in Shortcuts Preferences if they want to."""
+
+
+@register_command
+class SelectTool(Command):
+    """Chooses Selection tool."""
+
+
+@register_command
+class EnvelopeTool(Command):
+    """Chooses Envelope tool."""
+
+
+@register_command
+class DrawTool(Command):
+    """Chooses Draw tool."""
+
+
+@register_command
+class MultiTool(Command):
+    """Chooses the Multi-Tool"""
+
+
+@register_command
+class PrevTool(Command):
+    """Cycles backwards through the tools, starting from the currently selected tool: starting from Selection, it would navigate to Multi-tool to Zoom to Draw to Envelope to Selection."""
+
+
+@register_command
+class NextTool(Command):
+    """Cycles forwards through the tools, starting from the currently selected tool: starting from Selection, it would navigate to Envelope to Draw to Zoom to Multi-tool to Selection."""
+
+
+@register_command
+class OutputGain(Command):
+    """Displays the Playback Volume dialog. You can type a new value for the playback volume (between 0 and 1), or press Tab, then use the left and right arrow keys to adjust the slider."""
+
+
+@register_command
+class OutputGainInc(Command):
+    """Each key press will increase the playback volume by 0.1."""
+
+
+@register_command
+class OutputGainDec(Command):
+    """Each key press will decrease the playback volume by 0.1."""
+
+
+@register_command
+class InputGain(Command):
+    """Displays the Recording Volume dialog. You can type a new value for the recording volume (between 0 and 1), or press Tab, then use the left and right arrow keys to adjust the slider."""
+
+
+@register_command
+class InputGainInc(Command):
+    """Each key press will increase the recording volume by 0.1."""
+
+
+@register_command
+class InputGainDec(Command):
+    """Each key press will decrease the recording volume by 0.1."""
+
+
+@register_command
+class DeleteKey(Command):
+    """Deletes the selection. When focus is in Selection Toolbar, BACKSPACE is not a shortcut but navigates back to the previous digit and sets it to zero."""
+
+
+@register_command
+class DeleteKey2(Command):
+    """Deletes the selection."""
+
+
+@register_command
+class TimeShiftLeft(Command):
+    """Moves the currently focused audio track (or a separate clip in that track which contains the editing cursor or selection region) one screen pixel to left."""
+
+
+@register_command
+class TimeShiftRight(Command):
+    """Moves the currently focused audio track (or a separate clip in that track which contains the editing cursor or selection region) one screen pixel to right."""
+
+
+@register_command
+class PlayAtSpeed(Command):
+    """Play audio at a faster or slower speed"""
+
+
+@register_command
+class PlayAtSpeedLooped(Command):
+    """Combines looped play and play at speed"""
+
+
+@register_command
+class PlayAtSpeedCutPreview(Command):
+    """Combines cut preview and play at speed"""
+
+
+@register_command
+class SetPlaySpeed(Command):
+    """Displays the Playback Speed dialog. You can type a new value for the playback volume (between 0 and 1), or press Tab, then use the left and right arrow keys to adjust the slider."""
+
+
+@register_command
+class PlaySpeedInc(Command):
+    """Each key press will increase the playback speed by 0.1."""
+
+
+@register_command
+class PlaySpeedDec(Command):
+    """Each key press will decrease the playback speed by 0.1."""
+
+
+@register_command
+class SeekLeftShort(Command):
+    """Skips the playback cursor back one second by default."""
+
+
+@register_command
+class SeekRightShort(Command):
+    """Skips the playback cursor forward one second by default."""
+
+
+@register_command
+class SeekLeftLong(Command):
+    """Skips the playback cursor back 15 seconds by default."""
+
+
+@register_command
+class SeekRightLong(Command):
+    """Skips the playback cursor forward 15 seconds by default."""
+
+
+@register_command
+class InputDevice(Command):
+    """Displays the Select recording Device dialog for choosing the recording device, but only if the "Recording Device" dropdown menu in Device Toolbar has entries for devices. Otherwise, an recording error message will be displayed."""
+
+
+@register_command
+class OutputDevice(Command):
+    """Displays the Select Playback Device dialog for choosing the playback device, but only if the "Playback Device" dropdown menu in Device Toolbar has entries for devices. Otherwise, an error message will be displayed."""
+
+
+@register_command
+class AudioHost(Command):
+    """Displays the Select Audio Host dialog for choosing the particular interface with which Audacity communicates with your chosen playback and recording devices."""
+
+
+@register_command
+class InputChannels(Command):
+    """Displays the Select Recording Channels dialog for choosing the number of channels to be recorded by the chosen recording device."""
+
+
+@register_command
+class SnapToOff(Command):
+    """Equivalent to setting the Snap To control in Selection Toolbar to "Off"."""
+
+
+@register_command
+class SnapToNearest(Command):
+    """Equivalent to setting the Snap To control in Selection Toolbar to "Nearest"."""
+
+
+@register_command
+class SnapToPrior(Command):
+    """Equivalent to setting the Snap To control in Selection Toolbar to "Prior"."""
+
+
+@register_command
+class SelStart(Command):
+    """Select from cursor to start of track"""
+
+
+@register_command
+class SelEnd(Command):
+    """Select from cursor to end of track"""
+
+
+@register_command
+class SelExtLeft(Command):
+    """Increases the size of the selection by extending it to the left. The amount of increase is dependent on the zoom level. If there is no selection one is created starting at the cursor position."""
+
+
+@register_command
+class SelExtRight(Command):
+    """Increases the size of the selection by extending it to the right. The amount of increase is dependent on the zoom level. If there is no selection one is created starting at the cursor position."""
+
+
+@register_command
+class SelSetExtLeft(Command):
+    """Extend selection left a little (is this a duplicate?)"""
+
+
+@register_command
+class SelSetExtRight(Command):
+    """Extend selection right a litlle (is this a duplicate?)"""
+
+
+@register_command
+class SelCntrLeft(Command):
+    """Decreases the size of the selection by contracting it from the right. The amount of decrease is dependent on the zoom level. If there is no selection no action is taken."""
+
+
+@register_command
+class SelCntrRight(Command):
+    """Decreases the size of the selection by contracting it from the left. The amount of decrease is dependent on the zoom level. If there is no selection no action is taken."""
+
+
+@register_command
+class MoveToPrevLabel(Command):
+    """Moves selection to the previous label"""
+
+
+@register_command
+class MoveToNextLabel(Command):
+    """Moves selection to the next label"""
+
+
+@register_command
+class MinutesandSeconds(Command):
+    """Changes the Timeline display format to Minutes and Seconds (default setting)."""
+
+
+@register_command
+class BeatsandMeasures(Command):
+    """Changes the Timeline display format to Beats and Measures."""
+
+
+@register_command
+class PrevFrame(Command):
+    """Move backward through currently focused toolbar in Upper Toolbar dock area, Track View and currently focused toolbar in Lower Toolbar dock area.  Each use moves the keyboard focus as indicated."""
+
+
+@register_command
+class NextFrame(Command):
+    """Move forward through currently focused toolbar in Upper Toolbar dock area, Track View and currently focused toolbar in Lower Toolbar dock area.  Each use moves the keyboard focus as indicated."""
+
+
+@register_command
+class PrevTrack(Command):
+    """Focus one track up"""
+
+
+@register_command
+class NextTrack(Command):
+    """Focus one track down"""
+
+
+@register_command
+class FirstTrack(Command):
+    """Focus on first track"""
+
+
+@register_command
+class LastTrack(Command):
+    """Focus on last track"""
+
+
+@register_command
+class ShiftUp(Command):
+    """Focus one track up and select it"""
+
+
+@register_command
+class ShiftDown(Command):
+    """Focus one track down and select it"""
+
+
+@register_command
+class Toggle(Command):
+    """Toggle focus on current track"""
+
+
+@register_command
+class ToggleAlt(Command):
+    """Toggle focus on current track"""
+
+
+@register_command
+class CursorLeft(Command):
+    """When not playing audio, moves the editing cursor one screen pixel to left. When a Snap option is chosen, moves the cursor to the preceding unit of time as determined by the current selection format. If the key is held down, the cursor speed depends on the length of the tracks. When playing audio, moves the playback cursor as described at "Cursor Short Jump Left" """
+
+
+@register_command
+class CursorRight(Command):
+    """When not playing audio, moves the editing cursor one screen pixel to right. When a Snap option is chosen, moves the cursor to the following unit of time as determined by the current selection format. If the key is held down, the cursor speed depends on the length of the tracks. When playing audio, moves the playback cursor as described at "Cursor Short Jump Right" """
+
+
+@register_command
+class CursorShortJumpLeft(Command):
+    """When not playing audio, moves the editing cursor one second left by default. When playing audio, moves the playback cursor one second left by default. The default value can be changed by adjusting the "Short Period" under "Seek Time when playing" in Playback Preferences."""
+
+
+@register_command
+class CursorShortJumpRight(Command):
+    """When not playing audio, moves the editing cursor one second right by default. When playing audio, moves the playback cursor one second right by default. The default value can be changed by adjusting the "Short Period" under "Seek Time when playing" in Playback Preferences."""
+
+
+@register_command
+class CursorLongJumpLeft(Command):
+    """When not playing audio, moves the editing cursor 15 seconds left by default. When playing audio, moves the playback cursor 15 seconds left by default. The default value can be changed by adjusting the "Long Period" under "Seek Time when playing" in Playback Preferences."""
+
+
+@register_command
+class CursorLongJumpRight(Command):
+    """When not playing audio, moves the editing cursor 15 seconds right by default. When playing audio, moves the playback cursor 15 seconds right by default. The default value can be changed by adjusting the "Long Period" under "Seek Time when playing" in Playback Preferences."""
+
+
+@register_command
+class ClipLeft(Command):
+    """Moves the currently focused audio track (or a separate clip in that track which contains the editing cursor or selection region) one screen pixel to left."""
+
+
+@register_command
+class ClipRight(Command):
+    """Moves the currently focused audio track (or a separate clip in that track which contains the editing cursor or selection region) one screen pixel to right."""
+
+
+@register_command
+class TrackPan(Command):
+    """Brings up the Pan dialog for the focused track where you can enter a pan value, or use the slider for finer control of panning than is available when using the track pan slider."""
+
+
+@register_command
+class TrackPanLeft(Command):
+    """Controls the pan slider on the focused track. Each keypress changes the pan value by 10% left."""
+
+
+@register_command
+class TrackPanRight(Command):
+    """Controls the pan slider on the focused track. Each keypress changes the pan value by 10% right."""
+
+
+@register_command
+class TrackGain(Command):
+    """Brings up the Gain dialog for the focused track where you can enter a gain value, or use the slider for finer control of gain than is available when using the track pan slider."""
+
+
+@register_command
+class TrackGainInc(Command):
+    """Controls the gain slider on the focused track. Each keypress increases the gain value by 1 dB."""
+
+
+@register_command
+class TrackGainDec(Command):
+    """Controls the gain slider on the focused track. Each keypress decreases the gain value by 1 dB."""
+
+
+@register_command
+class TrackMenu(Command):
+    """Opens the Audio Track Dropdown Menu on the focused audio track or other track type. In the audio track dropdown, use Up, and Down, arrow keys to navigate the menu and Enter, to select a menu item. Use Right, arrow to open the "Set Sample Format" and "Set Rate" choices or Left, arrow to leave those choices."""
+
+
+@register_command
+class TrackMute(Command):
+    """Toggles the Mute button on the focused track."""
+
+
+@register_command
+class TrackSolo(Command):
+    """Toggles the Solo button on the focused track."""
+
+
+@register_command
+class TrackClose(Command):
+    """Close (remove) the focused track only."""
+
+
+@register_command
+class TrackMoveUp(Command):
+    """Moves the focused track up by one track and moves the focus there."""
+
+
+@register_command
+class TrackMoveDown(Command):
+    """Moves the focused track down by one track and moves the focus there."""
+
+
+@register_command
+class TrackMoveTop(Command):
+    """Moves the focused track up to the top of the track table and moves the focus there."""
+
+
+@register_command
+class TrackMoveBottom(Command):
+    """Moves the focused track down to the bottom of the track table and moves the focus there."""
+
+
+@register_command
+class SelectTime(Command):
+    """Modifies the temporal selection.  Start and End are time.  FromEnd allows selection from the end, which is handy to fade in and fade out a track."""
+
+    # double Start, (default:unchanged)
+    # double End, (default:unchanged)
+    # enum RelativeTo, (default:unchanged)
+
+    #  ProjectStart
+    #  Project
+    #  ProjectEnd
+    #  SelectionStart
+    #  Selection
+    #  SelectionEnd
+
+
+@register_command
+class SelectFrequencies(Command):
+    """Modifies what frequencies are selected.  High and Low are for spectral selection."""
+
+    # double High, (default:unchanged)
+    # double Low, (default:unchanged)
+
+
+@register_command
+class SelectTracks(Command):
+    """Modifies which tracks are selected.  First and Last are track numbers.  High and Low are for spectral selection.  The Mode parameter allows complex selections, e.g adding or removing tracks from the current selection."""
+
+    # double Track, (default:unchanged)
+    # double TrackCount, (default:unchanged)
+    # enum Mode, (default:unchanged)
+
+    #  Set
+    #  Add
+    #  Remove
+
+
+@register_command
+class SetTrackStatus(Command):
+    """Sets properties for a track or channel (or both).Name is used to set the name.  It is not used in choosing the track."""
+
+    # string Name, (default:unchanged)
+    # bool Selected, (default:unchanged)
+    # bool Focused, (default:unchanged)
+
+
+@register_command
+class SetTrackAudio(Command):
+    """Sets properties for a track or channel (or both).  Can set pan, gain, mute and solo."""
+
+    # bool Mute, (default:unchanged)
+    # bool Solo, (default:unchanged)
+    # double Gain, (default:unchanged)
+    # double Pan, (default:unchanged)
+
+
+@register_command
+class SetTrackVisuals(Command):
+    """Sets visual properties for a track or channel (or both).  SpectralPrefs=1 sets the track to use general preferences, SpectralPrefs=1 per track prefs. When using general preferences, SetPreferences can be used to change a preference and so affect display of the track."""
+
+    # int Height, (default:unchanged)
+    # enum Display, (default:unchanged)
+
+    #  Waveform
+    #  Spectrogram
+    #  Multi-view
+    # enum Scale, (default:unchanged)
+
+    #  Linear
+    #  dB
+    # enum Color, (default:unchanged)
+
+    #  Color0
+    #  Color1
+    #  Color2
+    #  Color3
+    # enum VZoom, (default:unchanged)
+
+    #  Reset
+    #  Times2
+    #  HalfWave
+    # double VZoomHigh, (default:unchanged)
+    # double VZoomLow, (default:unchanged)
+    # bool SpecPrefs, (default:unchanged)
+    # bool SpectralSel, (default:unchanged)
+    # enum Scheme, (default:unchanged)
+
+    #  Color (default)
+    #  Color (classic)
+    #  Grayscale
+    #  Inverse Grayscale
+
+
+@register_command
+class GetPreference(Command):
+    """Gets a single preference setting."""
+
+    # string Name, (default:)
+
+
+@register_command
+class SetPreference(Command):
+    """Sets a single preference setting.  Some settings such as them changes require a reload (use Reload=1), but this takes time and slows down a script."""
+
+    # string Name, (default:)
+    # string Value, (default:)
+    # bool Reload, (default:False)
+
+
+@register_command
+class SetClip(Command):
+    """Modify a clip by stating the track or channel a time within it. Color and start position can be set.  Try to avoid overlapping clips, as Audacity will allow it, but does not like them."""
+
+    # double At, (default:unchanged)
+    # enum Color, (default:unchanged)
+
+    #  Color0
+    #  Color1
+    #  Color2
+    #  Color3
+    # double Start, (default:unchanged)
+
+
+@register_command
+class SetProject(Command):
+    """Sets the project window to a particular location and size.  Can also change the caption - but that is cosmetic and may be overwritten again  later by Audacity."""
+
+    # string Name, (default:unchanged)
+    # double Rate, (default:unchanged)
+    # int X, (default:unchanged)
+    # int Y, (default:unchanged)
+    # int Width, (default:unchanged)
+    # int Height, (default:unchanged)
+
+
+@register_command
+class Select(Command):
+    """Selects audio.  Start and End are time.  First and Last are track numbers.  High and Low are for spectral selection.  FromEnd allows selection from the end, which is handy to fade in and fade out a track.  The Mode parameter allows complex selections, e.g adding or removing tracks from the current selection."""
+
+    # double Start, (default:unchanged)
+    # double End, (default:unchanged)
+    # enum RelativeTo, (default:unchanged)
+
+    #  ProjectStart
+    #  Project
+    #  ProjectEnd
+    #  SelectionStart
+    #  Selection
+    #  SelectionEnd
+    # double High, (default:unchanged)
+    # double Low, (default:unchanged)
+    # double Track, (default:unchanged)
+    # double TrackCount, (default:unchanged)
+    # enum Mode, (default:unchanged)
+
+    #  Set
+    #  Add
+    #  Remove
+
+
+@register_command
+class SetTrack(Command):
+    """Sets properties for a track or channel (or both).  Setting one channel of a stereo track can lead to interesting results.  That's most used when setting relative sizing of the two channels.  SpectralPrefs=1 sets the track to use general preferences, SpectralPrefs=1 per track prefs. When using general preferences, SetPreferences can be used to change a preference and so affect display of the track.  Name is used to set the name.  It is not used in choosing the track."""
+
+    # string Name, (default:unchanged)
+    # bool Selected, (default:unchanged)
+    # bool Focused, (default:unchanged)
+    # bool Mute, (default:unchanged)
+    # bool Solo, (default:unchanged)
+    # double Gain, (default:unchanged)
+    # double Pan, (default:unchanged)
+    # int Height, (default:unchanged)
+    # enum Display, (default:unchanged)
+
+    #  Waveform
+    #  Spectrogram
+    # enum Scale, (default:unchanged)
+
+    #  Linear
+    #  dB
+    # enum Color, (default:unchanged)
+
+    #  Color0
+    #  Color1
+    #  Color2
+    #  Color3
+    # enum VZoom, (default:unchanged)
+
+    #  Reset
+    #  Times2
+    #  HalfWave
+    # double VZoomHigh, (default:unchanged)
+    # double VZoomLow, (default:unchanged)
+    # bool SpecPrefs, (default:unchanged)
+    # bool SpectralSel, (default:unchanged)
+    # bool GrayScale, (default:unchanged)
+
+
+@register_command
+class GetInfo(Command):
+    """Gets information in a list in one of three formats."""
+
+    # enum Type, (default:Commands)
+    #  Commands
+    #  Menus
+    #  Preferences
+    #  Tracks
+    #  Clips
+    #  Envelopes
+    #  Labels
+    #  Boxes
+    # enum Format, (default:JSON)
+
+    #  JSON
+    #  LISP
+    #  Brief
+
+
+@register_command
+class Message(Command):
+    """Used in testing.  Sends the Text string back to you."""
+
+    # string Text, (default:Some message)
+
+
+@register_command
+class Help(Command):
+    """This is an extract from GetInfo Commands, with just one command."""
+
+    # string Command, (default:Help)
+    # enum Format, (default:JSON)
+
+    #  JSON
+    #  LISP
+    #  Brief
+
+
+@register_command
+class Import2(Command):
+    """Imports from a file.  The automation command uses a text box to get the file name rather than a normal file-open dialog."""
+
+    # string Filename, (default:)
+
+
+@register_command
+class Export2(Command):
+    """Exports selected audio to a named file.  This version of export has the full set of export options.  However, a current limitation is that the detailed option settings are always stored to and taken from saved preferences.  The net effect is that for a given format, the most recently used options for that format will be used. In the current implementation, NumChannels should be 1 (mono) or 2 (stereo)."""
+
+    # string Filename, (default:exported.wav)
+    # int NumChannels, (default:1)
+
+
+@register_command
+class OpenProject2(Command):
+    """Opens a project."""
+
+    # string Filename, (default:test.aup3)
+    # bool AddToHistory, (default:false)
+
+
+@register_command
+class SaveProject2(Command):
+    """Saves a project."""
+
+    # string Filename, (default:name.aup3)
+    # bool AddToHistory, (default:False)
+    # bool Compress, (default:False)
+
+
+@register_command
+class Drag(Command):
+    """Experimental command (called Drag in scripting) that moves the mouse.  An Id can be used to move the mouse into a button to get the hover effect.  Window names can be used instead.  If To is specified, the command does a drag, otherwise just a hover."""
+
+    # int Id, (default:unchanged)
+    # string Window, (default:unchanged)
+    # double FromX, (default:unchanged)
+    # double FromY, (default:unchanged)
+    # double ToX, (default:unchanged)
+    # double ToY, (default:unchanged)
+    # enum RelativeTo, (default:unchanged)
+
+    #  Panel
+    #  App
+    #  Track0
+    #  Track1
+
+
+@register_command
+class CompareAudio(Command):
+    """Compares selected range on two tracks.  Reports on the differences and similarities."""
+
+    # float Threshold, (default:0)
+
+
+@register_command
+class QuickHelp(Command):
+    """A brief version of help with some of the most essential information."""
+
+
+@register_command
+class Manual(Command):
+    """Opens the manual in the default browser."""
+
+
+@register_command
+class Updates(Command):
+    """Checks online to see if this is the latest version of Audacity."""
+
+
+@register_command
+class About(Command):
+    """Brings a dialog with information about Audacity, such as who wrote it, what features are enabled and the GNU GPL v2 license."""
+
+
+@register_command
+class DeviceInfo(Command):
+    """Shows technical information about your detected audio device(s)."""
+
+
+@register_command
+class MidiDeviceInfo(Command):
+    """Shows technical information about your detected MIDI device(s)."""
+
+
+@register_command
+class Log(Command):
+    """Launches the "Audacity Log" window, the log is largely a debugging aid, having timestamps for each entry"""
+
+
+@register_command
+class CrashReport(Command):
+    """Selecting this will generate a Debug report which could be useful in aiding the developers to identify bugs in Audacity or in third-party plugins"""
+
+
+@register_command
+class CheckDeps(Command):
+    """Lists any WAV or AIFF audio files that your project depends on, and allows you to copy these files into the project"""
+
+
+@register_command
+class PrevWindow(Command):
+    """Navigates to the previous window."""
+
+
+@register_command
+class NextWindow(Command):
+    """Navigates to the next window."""
