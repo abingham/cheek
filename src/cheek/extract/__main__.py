@@ -39,7 +39,7 @@ def _command_to_python(command: Command):
 
 
 def _arg_to_python(command_name, arg: Arg):
-    yield f"    {_valid_python_name(arg.name)}: {_python_type(command_name, arg)} = {_default_to_python(command_name, arg)}"
+    yield f"    {_valid_python_name(arg.name)}: {_python_type_ann(command_name, arg)} = {_default_to_python(command_name, arg)}"
 
 
 def _default_to_python(command_name, arg: Arg):
@@ -75,6 +75,13 @@ def _valid_python_name(name: str):
     name = name.replace("(", "_")
     name = name.replace(")", "_")
     return name
+
+
+def _python_type_ann(command_name, arg: Arg):
+    ann = _python_type(command_name, arg)
+    if arg.default is None:
+        ann = f"{ann} | None"
+    return ann
 
 
 def _python_type(command_name, arg: Arg):
