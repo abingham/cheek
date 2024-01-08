@@ -1,7 +1,5 @@
 from dataclasses import dataclass
 
-import bs4
-
 from .arg import Arg
 
 TEMPLATE = '''
