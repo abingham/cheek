@@ -8,7 +8,7 @@ from .command import Command
 
 
 def main():
-    with open(sys.argv[1], mode='rt', encoding='utf-8') as handle:
+    with open(sys.argv[1], mode="rt", encoding="utf-8") as handle:
         command_specs = json.load(handle)
 
     commands = parse_commands(command_specs)
@@ -31,11 +31,10 @@ def _command_to_python(command: Command):
             yield from _enum_to_python(command.name, arg)
 
     yield f"class {_valid_python_name(command.name)}:"
+    yield f"    {command.doc!r}"
     if command.args:
         for arg in command.args:
             yield from _arg_to_python(command.name, arg)
-    else:
-        yield "    pass"
 
 
 def _arg_to_python(command_name, arg: Arg):
