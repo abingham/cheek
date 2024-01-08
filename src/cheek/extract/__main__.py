@@ -30,7 +30,7 @@ def _command_to_python(command: Command):
         if arg.enum_values:
             yield from _enum_to_python(command.name, arg)
 
-    yield f"class {_valid_python_name(command.name)}:"
+    yield f"class {_valid_python_name(command.name)}(Command):"
     yield f"    {command.doc!r}"
     if command.args:
         for arg in command.args:
