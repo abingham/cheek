@@ -14,6 +14,7 @@ def main():
     commands = parse_commands(command_specs)
 
     print("from enum import Enum")
+    print("from .command_base import Command, Bool, register_command, all_command_classes, do")
 
     for command in commands:
         command_lines = _command_to_python(command)
@@ -30,6 +31,7 @@ def _command_to_python(command: Command):
         if arg.enum_values:
             yield from _enum_to_python(command.name, arg)
 
+    yield "@register_command"
     yield f"class {_valid_python_name(command.name)}(Command):"
     yield f"    {command.doc!r}"
     if command.args:
@@ -96,7 +98,7 @@ def _python_type(command_name, arg: Arg):
         case "float":
             return "float"
         case "bool":
-            return "bool"
+            return "Bool"
         case "enum":
             return _python_enum_name(command_name, arg.name)
         case _:

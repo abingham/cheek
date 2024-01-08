@@ -27,8 +27,8 @@ def field_info_to_python_type(field_info: pydantic.fields.FieldInfo):
     assert ann is not None, "Should not have None field type"
 
     # TODO: Handle Optional[X]. Also, understand when we see it.
-    if "Optional" in str(ann):
-        breakpoint()
+    # if "Optional" in str(ann):
+    #     breakpoint()
 
     # If ann is a Union, we return the first non-NoneType type.
     # TODO: What's the right way to iterate a union's types?
@@ -42,8 +42,8 @@ def field_info_to_python_type(field_info: pydantic.fields.FieldInfo):
 
 
 def create_command_from_kwargs(
-    command_class: Type[cheek.commands.Command], kwargs: dict[str, Any]
-) -> cheek.commands.Command:
+    command_class: Type[cheek.command_base.Command], kwargs: dict[str, Any]
+) -> cheek.command_base.Command:
     """Construct a Command instance from click kwargs.
 
     Click produces kwargs which are all lower-case. This function
@@ -83,7 +83,7 @@ def create_click_callback(command_class):
     def cmd_func(**kwargs):
         command_instance = create_command_from_kwargs(command_class, kwargs)
         log.info(command_instance)
-        results = cheek.commands.do(command_instance)
+        results = cheek.command_base.do(command_instance)
         print(results)
 
     return cmd_func

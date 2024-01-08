@@ -42,3 +42,23 @@ Tests
 There are a few tests, though we're very, very far from comprehensive. Really, since real testing would require determing that Audacity
 was doing the right thing, it's probably not practical to really test this too fully. But if you've got ideas about testing, 
 we could merge them in.
+
+Re-generating the Command subclasses
+====================================
+
+We can use the output from the scripting command "GetInfo" to regenerate
+all of the Command subclasses. Right now this is a bit rough, but here's
+what to do. 
+
+First, execute "GetInfo('Commands', 'JSON')" and capture the output. You can
+do this with cheek itself, or pyaudacity, or whatever. The JSON you get is
+likely to be invalid at first, so you'll need to clean it up. It should
+be clear how to do this.
+
+Save this cleaned-up JSON to a file, e.g. "commands.json". Then run::
+
+	python -m cheek.extract commands.json > src/cheek/commands.py
+
+That should do it. You may want to run this generated Python through
+a formatter, though it should be valid Python as-is. Commit the new
+commands.py to git and you'll have an updated command set.

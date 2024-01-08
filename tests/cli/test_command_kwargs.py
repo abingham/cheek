@@ -1,5 +1,5 @@
 from cheek.cli import create_command_from_kwargs
-from cheek.commands import SetLabel, Open
+from cheek.command_base import SetLabel, Open
 
 
 def test_set_label():
