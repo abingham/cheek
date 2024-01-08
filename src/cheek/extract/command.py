@@ -22,10 +22,10 @@ class Command:
     doc: str
 
     @classmethod
-    def from_html(cls, html: bs4.BeautifulSoup):
-        command_name = html.find_all("td")[0].find("b").text[:-1]
-        args = [Arg.from_html(h) for h in html.find_all("td")[2].find_all("i") if h.text != "none"]
-        doc = html.find_all("td")[3].text
+    def from_spec(cls, spec: dict):
+        command_name = spec["id"]
+        args = [Arg.from_spec(param) for param in spec["params"]]
+        doc = spec["tip"]
         return cls(command_name, args, doc.strip())
 
     def class_string(self):

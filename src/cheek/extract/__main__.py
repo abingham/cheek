@@ -1,6 +1,6 @@
+import json
 from pathlib import Path
 import sys
-import bs4
 
 from .arg import Arg
 
@@ -8,7 +8,10 @@ from .command import Command
 
 
 def main():
-    commands = tuple(parse_commands(Path(sys.argv[1]).read_text(encoding="utf-8")))
+    with open(sys.argv[1], mode='rt', encoding='utf-8') as handle:
+        command_specs = json.load(handle)
+
+    commands = parse_commands(command_specs)
 
     print("from enum import Enum")
 
@@ -17,11 +20,9 @@ def main():
         print("\n".join(command_lines))
 
 
-def parse_commands(text: str):
-    soup = bs4.BeautifulSoup(text, features="html.parser")
-    for table in soup.find_all("table")[1:]:
-        for row in table.find_all("tr")[1:]:
-            yield Command.from_html(row)
+def parse_commands(command_specs: list[dict]):
+    for command_spec in command_specs:
+        yield Command.from_spec(command_spec)
 
 
 def _command_to_python(command: Command):
