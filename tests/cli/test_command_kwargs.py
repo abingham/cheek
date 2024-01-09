@@ -1,5 +1,5 @@
 from cheek.cli import create_command_from_kwargs
-from cheek.command_base import SetLabel, Open
+from cheek.commands import SetLabel, OpenProject2
 
 
 def test_set_label():
@@ -22,13 +22,13 @@ def test_set_label():
 
 def test_open():
     cmd = create_command_from_kwargs(
-        Open,
+        OpenProject2,
         {
             "filename": "foo.txt",
             "addtohistory": True,
         }
     )
-    assert cmd == Open(
+    assert cmd == OpenProject2(
         Filename="foo.txt",
         AddToHistory=True
     )

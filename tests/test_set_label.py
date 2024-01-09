@@ -1,5 +1,5 @@
 from pydantic import ValidationError
-from cheek.command_base import SetLabel
+from cheek.commands import SetLabel
 import pytest
 
 def test_basic_command():
