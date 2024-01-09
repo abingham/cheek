@@ -14,13 +14,11 @@ Command classes
 ===============
 
 The scripting command classes are implemented in the `cheek.commands` submodule as subclasses of `cheek.commands.Command`. These 
-use `pydantic` to express their arguments.
+use `pydantic` to express their arguments. NB: we automatically generate these classes based on the output of Audacity's `GetInfo` command.
+See below for more details.
 
 At the time of writing, not all Audacity scripting commands are fully implemented. In particular, those which require parameters
 are not all done. Those without parameters are generally complete, though there may be bugs or gaps.
-
-If you want to implement one of the incomplete classes, the main task is to define its parameters in terms of `pydantic` fields. You'll
-find examples in the extant `Command` subclasses, e.g. `cheek.commands.SetLabel`.
 
 Basic programmatic use of a command is something like this::
 
