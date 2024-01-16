@@ -1,10 +1,9 @@
 """Command line interface for cheek.
 """
 
-from enum import Enum
 import logging
 from types import NoneType, UnionType
-from typing import Any, Optional, Type
+from typing import Any, Type
 
 import click
 import pydantic.fields
@@ -100,6 +99,8 @@ def create_cli():
 
     # For each registered Command subclass, construct a CLI command.
     for command_class in cheek.commands.all_command_classes():
+        # TODO: For enum parameter types, we need to create a click.Choice or something like that.
+
         # Loop over command.model_fields to figure out CLI arguments. Do this in reverse so that the innermost
         # decoration represents the last argument.
         click_params = [
@@ -118,9 +119,12 @@ def create_cli():
     return cli
 
 
+def main():
+    cli = create_cli()
+    cli()
+
+
 if __name__ == "__main__":
     # TODO: Make this configurable
     logging.basicConfig(level=logging.INFO)
-
-    cli = create_cli()
-    cli()
+    main()
