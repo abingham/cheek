@@ -26,6 +26,8 @@ class Command(BaseModel):
         for field, value in self.model_dump().items():
             if value is None:
                 continue
+            if isinstance(value, Enum):
+                value = value.value
             yield f'{field}="{value}"'
 
     @classmethod
